@@ -20,6 +20,20 @@ const firebaseConfig = {
 
 initializeApp(firebaseConfig)
 const database = getDatabase()
+//Пагинация
+const currentPage = ref(1)
+const itemsPerPage = 20 // Вы можете изменить это число в зависимости от желаемого количества элементов на странице
+const totalPages = computed(() => Math.ceil(items.value.length / itemsPerPage))
+
+const paginatedItems = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return items.value.slice(start, end)
+})
+
+const goToPage = (pageNumber) => {
+  currentPage.value = pageNumber
+}
 
 const rawItems = ref([])
 const { cart, addToCart, removeFromCart } = inject(['cart'])
@@ -141,5 +155,31 @@ const onClickAddPlus = (item) => {
       </select>
     </div>
   </div>
-  <CardList :items="items" @add-to-favorite="addToFavorite" @add-to-cart="onClickAddPlus" />
+  <CardList
+    :items="paginatedItems"
+    @add-to-favorite="addToFavorite"
+    @add-to-cart="onClickAddPlus"
+  />
+  <div class="flex justify-center items-center space-x-2 my-4">
+    <button v-if="currentPage > 1" @click="goToPage(currentPage - 1)" class="p-2">
+      <img src="/pag.png" alt="Prev" class="h-8 w-8 rotate-180" />
+      <!-- Используйте перевернутое изображение pag.png -->
+    </button>
+    <button
+      v-for="page in totalPages"
+      :key="page"
+      @click="goToPage(page)"
+      :class="[
+        'p-2 rounded-full border hover:bg-gray-200',
+        { 'bg-gray-300': page === currentPage },
+        'w-8 h-8 flex items-center justify-center'
+      ]"
+    >
+      {{ page }}
+    </button>
+    <button v-if="currentPage < totalPages" @click="goToPage(currentPage + 1)" class="p-2">
+      <img src="/pag.png" alt="Next" class="h-8 w-8" />
+      <!-- Используйте ваше изображение pag.png -->
+    </button>
+  </div>
 </template>
