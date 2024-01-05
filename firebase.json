@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "sneakers",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
