@@ -107,7 +107,7 @@ onUnmounted(() => {
         class="px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
       >
         <span>Мои заказы</span>
-        <img src="/arrow-next.svg" alt="Orders" class="w-4 h-4" />
+        <img src="/arrow-left.svg" alt="Orders" class="w-4 h-4 rotate-180" />
       </div>
       <div
         class="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center justify-between"

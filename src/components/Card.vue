@@ -47,7 +47,7 @@ onMounted(async () => {
         @click.stop="onFavoriteClick"
         :src="!props.isFavorite ? '/like-1.svg' : '/like-2.svg'"
         alt="like"
-        class="absolute top-3.5 left-3.5 w-8 h-8 sm:w-6 sm:h-6 md:w-8 md:h-8"
+        class="absolute top-2 left-2 w-8 h-8 sm:w-6 sm:h-6 md:w-10 md:h-10"
       />
       <img :src="props.imageUrl" alt="Sneaker" class="w-full" />
       <p>{{ props.title }}</p>

@@ -124,7 +124,7 @@ const proceedToCheckout = () => {
           :default-country="'ge'"
           :valid-characters-only="true"
           :preferred-countries="['ru', 'ua', 'by', 'kz', 'ge', 'am', 'az']"
-          :input-class="'form-input rounded-lg border border-gray-300 mb-4 p-2'"
+          :input-class="'form-input rounded-lg border border-gray-300  mb-4 p-2'"
         ></vue-tel-input>
       </div>
 
