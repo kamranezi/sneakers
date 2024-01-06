@@ -133,14 +133,14 @@ const onClickAddPlus = (item) => {
 </script>
 
 <template>
-  <div class="flex flex-col md:flex-row justify-between items-center">
-    <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-8">Все кроссовки</h2>
-    <div class="flex flex-col md:flex-row gap-3 mb-4 md:mb-0">
+  <div class="flex flex-row justify-end items-center">
+    <h2 class="hidden md:block text-2xl sm:text-3xl mb-4 font-bold">Все кроссовки</h2>
+    <div class="flex flex-col sm:flex-row gap-3 mb-4 md:mb-0">
       <div class="relative max-w-xs">
         <img class="absolute left-3 top-1/2 -translate-y-1/2" src="/search.svg" alt="Search" />
         <input
           @input="onChangeSearchInput"
-          class="border rounded-lg py-1 pl-10 pr-3 outline-none focus:border-gray-400 text-xs md:text-sm w-full"
+          class="border rounded-lg py-1 pl-8 outline-none focus:border-gray-400 text-xs md:text-sm w-auto"
           type="text"
           placeholder="Поиск..."
         />
@@ -160,7 +160,7 @@ const onClickAddPlus = (item) => {
     @add-to-favorite="addToFavorite"
     @add-to-cart="onClickAddPlus"
   />
-  <div class="flex justify-center items-center space-x-2 my-4">
+  <div class="flex justify-center items-center space-x-2 my-4 mb-8">
     <button v-if="currentPage > 1" @click="goToPage(currentPage - 1)" class="p-2">
       <img src="/pag.png" alt="Prev" class="h-8 w-8 rotate-180" />
       <!-- Используйте перевернутое изображение pag.png -->

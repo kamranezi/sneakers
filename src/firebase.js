@@ -24,7 +24,7 @@ export { app, database }
 // Настройка хостинга Firebase
 const firebaseHostingConfig = {
   hosting: {
-    public: 'public',
+    public: 'dist',
     ignore: ['firebase.json', '**/.*', '**/node_modules/**'],
     rewrites: [
       {

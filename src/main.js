@@ -9,7 +9,9 @@ import ProductDetails from './pages/ProductDetails.vue' // Импортируй�
 import VueTelInput from 'vue-tel-input'
 import 'vue-tel-input/vue-tel-input.css'
 const app = createApp(App)
+import Vue3TouchEvents from 'vue3-touch-events'
 
+app.use(Vue3TouchEvents)
 const routes = [
   { path: '/', name: 'Home', component: Home },
   { path: '/favorites', name: 'Favorites', component: Favorites },
