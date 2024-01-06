@@ -42,8 +42,12 @@ const filters = reactive({
   searchQuery: '',
   category: null
 })
+
 const selectedBrands = ref([])
 
+const selectedGenders = ref(['Men', 'Women', 'Kids']) // Установите начальные значения здесь
+// const selectedSizes = ref([]);
+const selectedSize = ref('')
 const toggleBrandSelection = (brand) => {
   const index = selectedBrands.value.indexOf(brand)
   if (index > -1) {
@@ -209,8 +213,44 @@ const onClickAddPlus = (item) => {
       </a>
     </div>
   </div>
-  <div class="flex flex-row justify-end items-center">
-    <h2 class="hidden md:block text-2xl sm:text-3xl mb-4 font-bold">Все кроссовки</h2>
+  <div class="flex flex-row justify-between items-center">
+    <div class="filter-section">
+      <div class="gender-filter">
+        <label class="gender-option">
+          <input type="checkbox" v-model="selectedGenders" value="Men" />
+          Men's
+        </label>
+        <label class="gender-option">
+          <input type="checkbox" v-model="selectedGenders" value="Women" />
+          Women's
+        </label>
+        <label class="gender-option">
+          <input type="checkbox" v-model="selectedGenders" value="Kids" />
+          Kids'
+        </label>
+      </div>
+      <div class="size-selector">
+        <select v-model="selectedSize">
+          <option value="">All Sizes</option>
+          <option value="5">5</option>
+          <option value="5.5">5.5</option>
+          <option value="6">6</option>
+          <option value="6.5">6.5</option>
+          <option value="7">7</option>
+          <option value="7.5">7.5</option>
+          <option value="8">8</option>
+          <option value="8.5">8.5</option>
+          <option value="9">9</option>
+          <option value="9.5">9.5</option>
+          <option value="10">10</option>
+          <option value="10.5">10.5</option>
+          <option value="11">11</option>
+          <option value="11.5">11.5</option>
+          <option value="12">12</option>
+          <option value="13">13</option>
+        </select>
+      </div>
+    </div>
     <div class="flex flex-col mt-2 sm:flex-row gap-3 mb-4 md:mb-0">
       <div class="relative max-w-xs">
         <img class="absolute left-3 top-1/2 -translate-y-1/2" src="/search.svg" alt="Search" />
@@ -328,5 +368,51 @@ const onClickAddPlus = (item) => {
   bottom: -2px; /* Adjust as needed */
   left: 0;
   transition: width 0.3s ease;
+}
+</style>
+<style scoped>
+.filter-section {
+  display: flex;
+  align-items: flex-start; /* Выравнивание элементов по верху */
+  margin-top: -4px; /* Удаление верхнего отступа */
+}
+
+.gender-filter,
+.size-selector {
+  margin-top: -2px; /* Удаление верхнего отступа для фильтров */
+}
+
+.gender-filter {
+  display: flex;
+}
+
+.gender-option {
+  margin-right: 16px;
+}
+
+.size-selector {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 300px; /* При необходимости отрегулируйте ширину */
+}
+
+.size-option input[type='checkbox'] {
+  margin-right: 5px; /* Отступ справа от чекбокса */
+}
+.size-selector select {
+  border: 1px solid #cccccc; /* Цвет и толщина границы */
+  padding: 1px 12px; /* Отступы внутри селектора */
+  border-radius: 4px; /* Скругление углов */
+}
+@media (max-width: 600px) {
+  /* Предполагаемый брейкпоинт для мобильных устройств */
+  .filter-section {
+    flex-direction: column; /* Столбцовое расположение на мобильных устройствах */
+  }
+
+  .size-selector {
+    order: 3; /* Перемещение в конец секции фильтров */
+    margin-top: 2px;
+  }
 }
 </style>

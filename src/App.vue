@@ -109,7 +109,7 @@ onMounted(() => {
 
 <template>
   <Drawer v-if="drawerOpen" :total-price="totalPrice" @create-order="createOrder" />
-  <Header :total-price="totalPrice" @open-drawer="openDrawer" class="fixed top-0 left-0 right-0" />
+  <Header :total-price="totalPrice" @open-drawer="openDrawer" />
 
   <div class="bg-white w-full m-auto rounded-xl shadow-xl p-4 md:p-8 mt-14">
     <div class="p-1 md:p-4">
