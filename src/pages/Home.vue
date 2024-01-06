@@ -39,11 +39,16 @@ const rawItems = ref([])
 const { cart, addToCart, removeFromCart } = inject(['cart'])
 const filters = reactive({
   sortBy: 'title',
-  searchQuery: ''
+  searchQuery: '',
+  category: null
 })
 
 const items = computed(() => {
   return rawItems.value
+    .filter((item) => {
+      // Фильтрация по категории, если выбрана
+      return filters.category ? item.category === filters.category : true
+    })
     .filter((item) => item.title.toLowerCase().includes(filters.searchQuery.toLowerCase()))
     .sort((a, b) => {
       switch (filters.sortBy) {
@@ -61,7 +66,24 @@ const updateIsAddedState = () => {
     item.isAdded = cart.value.some((cartItem) => cartItem.id === item.id)
   })
 }
+const categories = ref([])
 
+const fetchCategories = () => {
+  const itemsRef = firebaseRef(database, 'items')
+  onValue(itemsRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const allItems = Object.values(snapshot.val())
+      const uniqueCategories = Array.from(new Set(allItems.map((item) => item.category)))
+      categories.value = uniqueCategories
+    }
+  })
+}
+const selectCategory = (category) => {
+  // Handle category selection here
+  filters.category = category
+  console.log(`Category selected: ${category}`)
+  // You might want to update the displayed items based on the selected category
+}
 const fetchItems = () => {
   const itemsRef = firebaseRef(database, 'items')
   onValue(itemsRef, (snapshot) => {
@@ -92,6 +114,7 @@ onMounted(() => {
   fetchItems()
   fetchFavorites()
   updateIsAddedState()
+  fetchCategories()
 })
 
 watch(
@@ -133,6 +156,20 @@ const onClickAddPlus = (item) => {
 </script>
 
 <template>
+  <div class="category-scroll-container">
+    <div class="category-list">
+      <a
+        v-for="category in categories"
+        :key="category"
+        @click="selectCategory(category)"
+        :class="{ 'category-item-active': filters.category === category }"
+        class="category-item"
+      >
+        {{ category }}
+        <span v-if="filters.category === category" class="category-underline"></span>
+      </a>
+    </div>
+  </div>
   <div class="flex flex-row justify-end items-center">
     <h2 class="hidden md:block text-2xl sm:text-3xl mb-4 font-bold">Все кроссовки</h2>
     <div class="flex flex-col sm:flex-row gap-3 mb-4 md:mb-0">
@@ -183,3 +220,54 @@ const onClickAddPlus = (item) => {
     </button>
   </div>
 </template>
+<style scoped>
+.category-scroll-container {
+  overflow-x: auto;
+  scrollbar-width: thin; /* For Firefox */
+  -ms-overflow-style: none; /* For Internet Explorer and Edge */
+  position: relative;
+}
+
+.category-scroll-container::-webkit-scrollbar {
+  height: 2px; /* Height of the scrollbar */
+  background-color: transparent; /* Optional: can be set to the page background color */
+}
+.category-scroll-container::-webkit-scrollbar-thumb {
+  background-color: #000; /* Color of the scrollbar thumb */
+  border-radius: 1px; /* Optional: if you want rounded corners */
+}
+.category-list {
+  display: flex;
+  white-space: nowrap;
+  padding-bottom: 4px;
+  margin-top: -6px;
+  padding-top: -8px;
+  /* Adjusts the space for the invisible scrollbar */
+}
+
+.category-item {
+  margin-right: 20px; /* Add spacing between items */
+  cursor: pointer;
+  position: relative;
+}
+
+.category-item:hover .category-underline,
+.category-item.active .category-underline {
+  width: 100%;
+  height: 2px;
+  background-color: black;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.category-underline {
+  width: 100%;
+  height: 2px;
+  background-color: black;
+  position: absolute;
+  bottom: -2px; /* Adjust as needed */
+  left: 0;
+  transition: width 0.3s ease;
+}
+</style>
