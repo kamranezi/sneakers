@@ -43,7 +43,7 @@ const filters = reactive({
   category: null
 })
 
-const selectedBrands = ref([])
+const selectedBrands = ref(['Adidas'])
 
 const selectedGenders = ref(['Men', 'Women', 'Kids']) // Установите начальные значения здесь
 // const selectedSizes = ref([]);
@@ -213,7 +213,7 @@ const onClickAddPlus = (item) => {
       </a>
     </div>
   </div>
-  <div class="flex flex-row justify-between items-center">
+  <div class="flex flex-row justify-between items-center" style="border-bottom: 1px solid #ccc">
     <div class="filter-section">
       <div class="gender-filter">
         <label class="gender-option">
@@ -251,19 +251,19 @@ const onClickAddPlus = (item) => {
         </select>
       </div>
     </div>
-    <div class="flex flex-col mt-2 sm:flex-row gap-3 mb-4 md:mb-0">
-      <div class="relative max-w-xs">
+    <div class="flex flex-col sm:flex-row mt-4 gap-2 mb-4">
+      <div class="relative max-w-[200px] w-full">
         <img class="absolute left-3 top-1/2 -translate-y-1/2" src="/search.svg" alt="Search" />
         <input
           @input="onChangeSearchInput"
-          class="border rounded-lg py-1 pl-8 outline-none focus:border-gray-400 text-xs md:text-sm w-auto"
+          class="border rounded-lg py-1 pl-8 outline-none focus:border-gray-400 text-xs md:text-sm w-full"
           type="text"
           placeholder="Поиск..."
         />
       </div>
       <select
         @change="onChangeSelect"
-        class="border rounded-lg py-1 px-2 outline-none focus:border-gray-400 text-xs md:text-sm max-w-xs"
+        class="border rounded-lg py-1 px-2 outline-none focus:border-gray-400 text-xs md:text-sm w-full max-w-[200px]"
       >
         <option value="name">По популярности</option>
         <option value="price">Сначала дешевые</option>
@@ -303,18 +303,19 @@ const onClickAddPlus = (item) => {
 .brand-filter {
   display: flex;
   justify-content: flex-start; /* Corrected to ensure compatibility */
-  padding-bottom: 2px;
+  padding-bottom: 4px;
+  margin-top: 18px;
   border-bottom: 2px solid #eceff1;
 }
 
 .brand-option {
-  margin-right: 16px; /* Space between brand options */
+  margin-right: 10px; /* Space between brand options */
   display: flex;
   align-items: center;
 }
 
 .brand-option input[type='checkbox'] {
-  margin-right: 8px; /* Space between checkbox and label */
+  margin-right: 3px; /* Space between checkbox and label */
 }
 
 /* You might want to add further styles for your labels or inputs here */
@@ -374,7 +375,7 @@ const onClickAddPlus = (item) => {
 .filter-section {
   display: flex;
   align-items: flex-start; /* Выравнивание элементов по верху */
-  margin-top: -4px; /* Удаление верхнего отступа */
+  margin-top: -2px; /* Удаление верхнего отступа */
 }
 
 .gender-filter,
@@ -412,7 +413,7 @@ const onClickAddPlus = (item) => {
 
   .size-selector {
     order: 3; /* Перемещение в конец секции фильтров */
-    margin-top: 2px;
+    margin-bottom: 4px;
   }
 }
 </style>

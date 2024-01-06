@@ -111,8 +111,8 @@ onMounted(() => {
   <Drawer v-if="drawerOpen" :total-price="totalPrice" @create-order="createOrder" />
   <Header :total-price="totalPrice" @open-drawer="openDrawer" />
 
-  <div class="bg-white w-full m-auto rounded-xl shadow-xl p-4 md:p-8 mt-14">
-    <div class="p-1 md:p-4">
+  <div class="bg-white w-full m-auto rounded-xl shadow-xl p-4 mt-14">
+    <div class="md:p-0.5">
       <router-view></router-view>
     </div>
   </div>
