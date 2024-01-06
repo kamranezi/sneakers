@@ -4,6 +4,18 @@ import { useRouter } from 'vue-router'
 import { initializeApp } from 'firebase/app'
 import { getDatabase, ref as dbRef, get, set, remove } from 'firebase/database'
 
+const swipeLeft = () => {
+  if (currentImageIndex.value < productDetails.value.image_urls.length - 1) {
+    currentImageIndex.value++
+  }
+}
+
+const swipeRight = () => {
+  if (currentImageIndex.value > 0) {
+    currentImageIndex.value--
+  }
+}
+
 const emit = defineEmits(['openDrawer'])
 const firebaseConfig = {
   apiKey: 'AIzaSyCE2imVR50t0z4dVKgPKAoLvjtz6I8KRog',
@@ -14,7 +26,9 @@ const firebaseConfig = {
   messagingSenderId: '278974655722',
   appId: '1:278974655722:web:e033d27d8c2a69f2c87b93'
 }
-
+const goBack = () => {
+  router.go(-1) // Или router.back();
+}
 // Инициализация Firebase
 initializeApp(firebaseConfig)
 const database = getDatabase()
@@ -136,9 +150,26 @@ const toggleFavorite = async () => {
 
 <!--Шаблон снизу-->
 <template>
-  <div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-6">{{ productDetails.title }}</h1>
-    <div class="flex flex-wrap lg:flex-nowrap">
+  <div class="container mx-auto">
+    <div class="container">
+      <div class="flex items-center">
+        <img
+          @click="goBack"
+          src="/back1.png"
+          alt="Назад"
+          class="mr-3 md:mr-3 mb-2 z-0 cursor-pointer"
+        />
+        <h1 class="text-xl md:text-3xl font-bold mb-3 md:mb-6 flex-grow">
+          {{ productDetails.title }}
+        </h1>
+      </div>
+    </div>
+
+    <div
+      class="relative slider mb-2"
+      v-touch:swipe.left="swipeLeft"
+      v-touch:swipe.right="swipeRight"
+    >
       <!-- Слайдер изображений с цветами -->
       <div class="relative flex-auto lg:flex-none lg:w-1/2 xl:w-2/5">
         <div class="relative slider mb-2">
@@ -175,19 +206,25 @@ const toggleFavorite = async () => {
         </div>
       </div>
       <!-- Сайдбар с ценой и размерами US -->
-      <div class="flex-1 lg:w-1/2 xl:w-3/5 pl-0 lg:pl-8">
-        <p class="text-lg font-semibold mb-4" v-if="productDetails && productDetails.price">
+      <div class="flex-1 lg:w-1/2 xl:w-3/5 pl-0">
+        <p
+          class="text-base sm:text-2xl font-semibold mb-2 mt-2"
+          v-if="productDetails && productDetails.price"
+        >
           Цена: ${{ productDetails.price }}
         </p>
 
-        <h2 class="font-semibold mb-2">Sizes (US):</h2>
+        <h2 class="text-lg sm:text-xl font-semibold mb-2">Sizes (US):</h2>
         <div class="flex flex-wrap gap-2 mb-4">
           <button
             v-for="size in productDetails.sizes && productDetails.sizes.US"
             :key="size"
             @click="selectSize(size)"
-            class="p-2 border rounded cursor-pointer"
-            :class="{ 'bg-blue-500 text-white': size === selectedSize }"
+            class="w-2/5 h-8 sm:w-1/4 sm:h-12 border border-black rounded-md cursor-pointer transition-colors duration-300"
+            :class="{
+              'bg-blue-500 text-white': size === selectedSize,
+              'hover:bg-blue-300': size !== selectedSize
+            }"
           >
             {{ size }}
           </button>
@@ -232,9 +269,9 @@ const toggleFavorite = async () => {
           </button>
         </div>
         <!-- Описание продукта -->
-        <div class="description mt-4 md:max-w-md">
-          <h2 class="font-medium mb-2">Description:</h2>
-          <p v-if="productDetails && productDetails.description">
+        <div class="description mt-4 md:max-w-3xl lg:max-w-5xl">
+          <h2 class="text-lg sm:text-3xl font-semibold mb-3">Description:</h2>
+          <p class="text-md sm:text-base mb-4" v-if="productDetails && productDetails.description">
             {{ productDetails.description }}
           </p>
         </div>

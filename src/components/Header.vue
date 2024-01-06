@@ -40,7 +40,7 @@ onUnmounted(() => {
 //
 <template>
   <header
-    class="flex justify-between items-center border-b border-slate-300 bg-slate-50 px-4 py-2 md:px-8 md:py-4"
+    class="flex justify-between items-center border-b border-slate-400 bg-slate-50 px-4 py-2 md:px-8 md:py-4 fixed top-0 left-0 right-0 z-10"
   >
     <div class="flex items-center gap-4">
       <button

@@ -33,10 +33,10 @@ const proceedToCheckout = () => {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black opacity-70 z-10 hidden sm:block"></div>
+  <div class="fixed inset-0 bg-black opacity-70 z-20 hidden sm:block"></div>
 
   <div
-    class="fixed top-0 sm:right-0 h-full sm:w-96 w-full bg-white z-20 p-4 sm:p-8 overflow-y-auto"
+    class="fixed top-0 sm:right-0 h-full sm:w-96 w-full bg-white z-30 p-4 sm:p-8 overflow-y-auto"
   >
     <div class="flex items-center gap-5 mb-4">
       <img

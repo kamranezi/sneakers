@@ -47,14 +47,14 @@ onMounted(async () => {
         @click.stop="onFavoriteClick"
         :src="!props.isFavorite ? '/like-1.svg' : '/like-2.svg'"
         alt="like"
-        class="absolute top-2 left-2 w-8 h-8 sm:w-6 sm:h-6 md:w-10 md:h-10"
+        class="absolute top-1 left-1 w-8 h-8 sm:w-6 sm:h-6 md:w-10 md:h-10"
       />
       <img :src="props.imageUrl" alt="Sneaker" class="w-full" />
-      <p>{{ props.title }}</p>
-      <div class="text-sm text-gray-500 mb-3">8 цветов доступно</div>
+      <p class="ml-1">{{ props.title }}</p>
+      <div class="text-sm ml-1 text-gray-500 mb-3">8 цветов доступно</div>
     </div>
     <div class="flex justify-between items-center mt-3">
-      <b class="text-lg sm:text-xl">${{ props.price }}</b>
+      <b class="text-lg ml-1 mb-1 sm:text-xl">${{ props.price }}</b>
     </div>
   </div>
 </template>
