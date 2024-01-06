@@ -42,6 +42,16 @@ const filters = reactive({
   searchQuery: '',
   category: null
 })
+const selectedBrands = ref([])
+
+const toggleBrandSelection = (brand) => {
+  const index = selectedBrands.value.indexOf(brand)
+  if (index > -1) {
+    selectedBrands.value.splice(index, 1) // Remove brand if it's already selected
+  } else {
+    selectedBrands.value.push(brand) // Add brand if it's not selected
+  }
+}
 
 const items = computed(() => {
   return rawItems.value
@@ -156,6 +166,35 @@ const onClickAddPlus = (item) => {
 </script>
 
 <template>
+  <div class="brand-filter">
+    <!-- Adidas -->
+    <div class="brand-option" @click="toggleBrandSelection('Adidas')">
+      <input type="checkbox" id="brand-adidas" :checked="selectedBrands.includes('Adidas')" />
+      <label for="brand-adidas">Adidas</label>
+    </div>
+
+    <!-- Nike -->
+    <div class="brand-option" @click="toggleBrandSelection('Nike')">
+      <input type="checkbox" id="brand-nike" :checked="selectedBrands.includes('Nike')" />
+      <label for="brand-nike">Nike</label>
+    </div>
+
+    <!-- Reebok -->
+    <div class="brand-option" @click="toggleBrandSelection('Reebok')">
+      <input type="checkbox" id="brand-reebok" :checked="selectedBrands.includes('Reebok')" />
+      <label for="brand-reebok">Reebok</label>
+    </div>
+
+    <!-- New Balance -->
+    <div class="brand-option" @click="toggleBrandSelection('New Balance')">
+      <input
+        type="checkbox"
+        id="brand-new-balance"
+        :checked="selectedBrands.includes('New Balance')"
+      />
+      <label for="brand-new-balance">New Balance</label>
+    </div>
+  </div>
   <div class="category-scroll-container">
     <div class="category-list">
       <a
@@ -172,7 +211,7 @@ const onClickAddPlus = (item) => {
   </div>
   <div class="flex flex-row justify-end items-center">
     <h2 class="hidden md:block text-2xl sm:text-3xl mb-4 font-bold">Все кроссовки</h2>
-    <div class="flex flex-col sm:flex-row gap-3 mb-4 md:mb-0">
+    <div class="flex flex-col mt-2 sm:flex-row gap-3 mb-4 md:mb-0">
       <div class="relative max-w-xs">
         <img class="absolute left-3 top-1/2 -translate-y-1/2" src="/search.svg" alt="Search" />
         <input
@@ -221,6 +260,27 @@ const onClickAddPlus = (item) => {
   </div>
 </template>
 <style scoped>
+.brand-filter {
+  display: flex;
+  justify-content: flex-start; /* Corrected to ensure compatibility */
+  padding-bottom: 2px;
+  border-bottom: 2px solid #eceff1;
+}
+
+.brand-option {
+  margin-right: 16px; /* Space between brand options */
+  display: flex;
+  align-items: center;
+}
+
+.brand-option input[type='checkbox'] {
+  margin-right: 8px; /* Space between checkbox and label */
+}
+
+/* You might want to add further styles for your labels or inputs here */
+</style>
+
+<style scoped>
 .category-scroll-container {
   overflow-x: auto;
   scrollbar-width: thin; /* For Firefox */
@@ -240,8 +300,7 @@ const onClickAddPlus = (item) => {
   display: flex;
   white-space: nowrap;
   padding-bottom: 4px;
-  margin-top: -6px;
-  padding-top: -8px;
+  margin-top: 2px;
   /* Adjusts the space for the invisible scrollbar */
 }
 
