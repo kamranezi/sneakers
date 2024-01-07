@@ -72,7 +72,9 @@ const register = async () => {
         name: '', // Пустые начальные значения для остальных полей
         gender: '',
         age: '',
-        size: ''
+        size: '',
+        favorites: [], // Инициализация пустого массива для избранного
+        orders: []
       })
       console.log('User profile created')
     } catch (error) {
