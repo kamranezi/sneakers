@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import Card from './Card.vue'
+import { remove } from 'firebase/database'
 
 const props = defineProps({
   items: Array

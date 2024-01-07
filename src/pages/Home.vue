@@ -1,9 +1,11 @@
 <script setup>
 import { initializeApp } from 'firebase/app'
-import { getDatabase, ref as firebaseRef, onValue, set, remove, update } from 'firebase/database'
+import { getDatabase, ref as dbRef, onValue, set, remove, update, get } from 'firebase/database'
 import { onMounted, ref, reactive, watch, computed } from 'vue'
 import { inject } from 'vue'
 import CardList from '../components/CardList.vue'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import { app } from '@/firebase.js'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCE2imVR50t0z4dVKgPKAoLvjtz6I8KRog',
@@ -15,16 +17,78 @@ const firebaseConfig = {
   appId: '1:278974655722:web:e033d27d8c2a69f2c87b93'
 }
 
-// Initialize Firebase
-// const app = initializeApp(firebaseConfig)
-
+// Инициализация Firebase
 initializeApp(firebaseConfig)
 const database = getDatabase()
+const auth = getAuth(app) // Инициализация auth
+const { cart, addToCart, removeFromCart } = inject(['cart'])
+const favorites = ref([])
+const userFavorites = ref([])
+const updateIsAddedState = () => {
+  rawItems.value.forEach((item) => {
+    item.isAdded = cart.value.some((cartItem) => cartItem.id === item.id)
+  })
+}
+const onFavoriteClick = async (item) => {
+  if (!auth.currentUser) {
+    console.error('Пользователь не авторизован')
+    return
+  }
+  const userId = auth.currentUser.uid
+  const itemRef = dbRef(database, `users/${userId}/favorites/${item.id}`)
+  if (item.isFavorite) {
+    await remove(itemRef)
+    userFavorites.value = userFavorites.value.filter((favId) => favId !== item.id)
+  } else {
+    await set(itemRef, true)
+    userFavorites.value.push(item.id)
+  }
+  item.isFavorite = !item.isFavorite
+}
+const isLoggedIn = ref(true)
+onMounted(() => {
+  onAuthStateChanged(auth, (user) => {
+    isLoggedIn.value = user
+  })
+})
+
+onMounted(async () => {
+  if (auth.currentUser) {
+    const userId = auth.currentUser.uid
+    const favoritesRef = dbRef(database, `users/${userId}/favorites`)
+    onValue(favoritesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        userFavorites.value = Object.keys(snapshot.val())
+        // Теперь установите isFavorite для каждого элемента на основе userFavorites
+        rawItems.value.forEach((item) => {
+          item.isFavorite = userFavorites.value.includes(item.id)
+        })
+      } else {
+        userFavorites.value = []
+      }
+    })
+  }
+})
+
+// Функция для удаления из избранного
+
+const loadFavoriteItems = async () => {
+  const loadedItems = []
+  for (const favoriteId of favorites.value) {
+    const itemRef = dbRef(database, `items/${favoriteId}`)
+    const itemSnapshot = await get(itemRef)
+    if (itemSnapshot.exists()) {
+      loadedItems.push(itemSnapshot.val())
+    }
+  }
+  items.value = loadedItems
+}
+const favoritesItems = ref([]) // Если используется Vue 3
+
 //Пагинация
 const currentPage = ref(1)
 const itemsPerPage = 20 // Вы можете изменить это число в зависимости от желаемого количества элементов на странице
 const totalPages = computed(() => Math.ceil(items.value.length / itemsPerPage))
-
 const paginatedItems = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
@@ -34,9 +98,7 @@ const paginatedItems = computed(() => {
 const goToPage = (pageNumber) => {
   currentPage.value = pageNumber
 }
-
 const rawItems = ref([])
-const { cart, addToCart, removeFromCart } = inject(['cart'])
 const filters = reactive({
   sortBy: 'title',
   searchQuery: '',
@@ -75,15 +137,10 @@ const items = computed(() => {
       }
     })
 })
-const updateIsAddedState = () => {
-  rawItems.value.forEach((item) => {
-    item.isAdded = cart.value.some((cartItem) => cartItem.id === item.id)
-  })
-}
 const categories = ref([])
 
 const fetchCategories = () => {
-  const itemsRef = firebaseRef(database, 'items')
+  const itemsRef = dbRef(database, 'items')
   onValue(itemsRef, (snapshot) => {
     if (snapshot.exists()) {
       const allItems = Object.values(snapshot.val())
@@ -98,66 +155,67 @@ const selectCategory = (category) => {
   console.log(`Category selected: ${category}`)
   // You might want to update the displayed items based on the selected category
 }
-const fetchItems = () => {
-  const itemsRef = firebaseRef(database, 'items')
-  onValue(itemsRef, (snapshot) => {
-    if (snapshot.exists()) {
-      rawItems.value = Object.entries(snapshot.val()).map(([key, value]) => ({
-        id: key,
-        ...value,
-        isFavorite: false
-      }))
-      updateIsAddedState()
-    }
-  })
+const onClickAddPlus = (item) => {
+  if (!item.isAdded) {
+    addToCart(item)
+  } else {
+    removeFromCart(item)
+  }
 }
-const fetchFavorites = () => {
-  const favoritesRef = firebaseRef(database, 'favorites')
-  onValue(favoritesRef, (snapshot) => {
-    if (snapshot.exists()) {
-      const favorites = snapshot.val()
-      items.value.forEach((item) => {
-        item.isFavorite = !!favorites[item.id]
-      })
-    }
-  })
+const fetchItems = async () => {
+  const itemsRef = dbRef(database, 'items')
+  const snapshot = await get(itemsRef)
+  if (snapshot.exists()) {
+    rawItems.value = Object.entries(snapshot.val()).map(([key, value]) => ({
+      id: key,
+      ...value,
+      isFavorite: userFavorites.value.includes(key)
+    }))
+  }
 }
-
-onMounted(() => {
-  cart.value = JSON.parse(localStorage.getItem('cart')) || []
-  fetchItems()
-  fetchFavorites()
-  updateIsAddedState()
-  fetchCategories()
-})
-
-watch(
-  cart,
-  (newCart) => {
-    localStorage.setItem('cart', JSON.stringify(newCart))
-    updateIsAddedState()
-  },
-  { deep: true }
-)
-
-const addToFavorites = async (productId) => {
+const emit = defineEmits(['addToFavorite'])
+const addToFavorite = (item) => {
+  emit('addToFavorite', item)
+}
+// Функция для получения избранных товаров текущего пользователя
+const fetchUserFavorites = async () => {
   if (!auth.currentUser) {
     console.error('Пользователь не авторизован')
     return
   }
 
-  // Получение текущего списка избранного
-  const userRef = dbRef(database, `users/${auth.currentUser.uid}`)
-  const snapshot = await get(userRef)
-  let favorites = snapshot.exists() ? snapshot.val().favorites || [] : []
-
-  // Добавление нового товара в список
-  favorites.push(productId)
-
-  // Обновление профиля пользователя
-  await update(userRef, { favorites })
-  console.log('Избранное обновлено')
+  const favoritesRef = dbRef(database, `users/${auth.currentUser.uid}/favorites`)
+  const snapshot = await get(favoritesRef)
+  if (snapshot.exists()) {
+    userFavorites.value = Object.keys(snapshot.val())
+  } else {
+    userFavorites.value = []
+  }
 }
+const fetchItemsAndUpdateFavorites = async () => {
+  await fetchItems()
+  await fetchUserFavorites()
+  // Обновление флага isFavorite для каждого элемента в rawItems
+  rawItems.value.forEach((item) => {
+    item.isFavorite = userFavorites.value.includes(item.id)
+  })
+}
+onMounted(() => {
+  cart.value = JSON.parse(localStorage.getItem('cart')) || []
+  fetchItems().then(fetchUserFavorites) // Первоначально загружаем все элементы, затем избранные
+  updateIsAddedState()
+  fetchCategories()
+})
+onMounted(async () => {
+  if (auth.currentUser) {
+    await fetchUserFavorites()
+  }
+  // Загрузите корзину и другие необходимые данные
+})
+
+watch(userFavorites, async () => {
+  await fetchItems() // Перезагрузка элементов при изменении избранных
+})
 const onChangeSelect = (event) => {
   filters.sortBy = event.target.value
   // fetchItems() вызывать, если вам нужно изменить запрос к базе данных на основе сортировки
@@ -166,14 +224,6 @@ const onChangeSelect = (event) => {
 const onChangeSearchInput = (event) => {
   filters.searchQuery = event.target.value
   // fetchItems() вызывать, если вам нужно изменить запрос к базе данных на основе строки поиска
-}
-
-const onClickAddPlus = (item) => {
-  if (!item.isAdded) {
-    addToCart(item)
-  } else {
-    removeFromCart(item)
-  }
 }
 </script>
 
@@ -281,7 +331,7 @@ const onClickAddPlus = (item) => {
   </div>
   <CardList
     :items="paginatedItems"
-    @add-to-favorite="addToFavorite"
+    @add-to-favorite="onFavoriteClick"
     @add-to-cart="onClickAddPlus"
   />
   <div class="flex justify-center items-center space-x-2 my-4 mb-8">

@@ -43,8 +43,8 @@ const customerName = ref('')
 const customerEmail = ref('')
 const customerGender = ref('')
 const customerAge = ref('')
-const customerSize = ref('')
 const customerShoeSize = ref('')
+const favorites = ref([])
 
 const loginUser = async () => {
   try {
@@ -107,19 +107,30 @@ const updateProfile = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   onAuthStateChanged(auth, async (user) => {
     isLoggedIn.value = !!user
     if (user) {
-      const snapshot = await get(dbRef(database, `users/${user.uid}`))
-      if (snapshot.exists()) {
-        const data = snapshot.val()
+      const userRef = dbRef(database, `users/${user.uid}`)
+
+      // Получение данных пользователя
+      const userSnapshot = await get(userRef)
+      if (userSnapshot.exists()) {
+        const userData = userSnapshot.val()
+        console.log('Полученные данные пользователя:', userData) // Добавьте эту строку для отладки
+
         // Обновление данных профиля
-        customerName.value = data.name || ''
-        customerEmail.value = data.email || ''
-        customerGender.value = data.gender || ''
-        customerAge.value = data.age || ''
-        customerShoeSize.value = data.size ? String(data.size) : '' // Преобразование в строку
+        customerName.value = userData.name || ''
+        customerEmail.value = userData.email || ''
+        customerGender.value = userData.gender || ''
+        customerAge.value = userData.age || ''
+        customerShoeSize.value = userData.size ? String(userData.size) : ''
+
+        // Получение и вывод избранных ID товаров пользователя
+        if (userData.favorites && userData.favorites.length > 0) {
+          favorites.value = userData.favorites
+          console.log('Избранные ID товаров:', favorites.value)
+        }
       }
     }
   })
@@ -187,7 +198,7 @@ const props = defineProps({
 
       <select
         v-model="customerShoeSize"
-        class="form-input w-1/6 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
+        class="form-input w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
       >
         <option value="5">5</option>
         <option value="5.5">5.5</option>

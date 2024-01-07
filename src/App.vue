@@ -28,9 +28,9 @@ const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
 // Получение экземпляра базы данных Firebase
 const database = getDatabase(app)
-// const toggleMode = () => {
-//   isLoginMode.value = !isLoginMode.value
-// }
+const toggleMode = () => {
+  isLoginMode.value = !isLoginMode.value
+}
 const login = async () => {
   try {
     await signInWithEmailAndPassword(auth, email.value, password.value)
@@ -38,6 +38,26 @@ const login = async () => {
   } catch (error) {
     console.error(error)
     // Обработка ошибок входа
+  }
+}
+const register = async () => {
+  console.log('Attempting to register:', email.value, password.value)
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value)
+    console.log('User registered:', userCredential.user)
+
+    // Создание профиля пользователя
+    try {
+      await set(dbRef(database, `users/${userCredential.user.uid}`), {
+        favorites: [],
+        orders: []
+      })
+      console.log('User profile created')
+    } catch (error) {
+      console.error('Error creating user profile:', error)
+    }
+  } catch (error) {
+    console.error('Registration error:', error)
   }
 }
 
@@ -54,7 +74,8 @@ const fetchUserProfile = async (userId) => {
     console.error('Error fetching user profile:', error)
   }
 }
-const showLoginModal = ref(true)
+
+const showLoginModal = ref(false)
 
 const cart = ref([])
 const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.price, 0))
@@ -172,7 +193,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <!--  <LoginModal v-if="showLoginModal" @close="showLoginModal = false" />-->
+  <LoginModal v-if="showLoginModal" @close="showLoginModal = false" />
 
   <Drawer v-if="drawerOpen" :total-price="totalPrice" @create-order="createOrder" />
   <Header :total-price="totalPrice" @open-drawer="openDrawer" />

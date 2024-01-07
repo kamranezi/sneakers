@@ -44,10 +44,10 @@ onMounted(async () => {
   >
     <div class="flex-grow">
       <img
-        @click.stop="onFavoriteClick"
+        @click.stop="onFavoriteClick(item)"
         :src="!props.isFavorite ? '/like-1.svg' : '/like-2.svg'"
         alt="like"
-        class="absolute top-1 left-1 w-8 h-8 sm:w-6 sm:h-6 md:w-10 md:h-10"
+        class="absolute top-1 left-1 w-8 h-8 sm:w-8 sm:h-8 md:w-10 md:h-10"
       />
       <img :src="props.imageUrl" alt="Sneaker" class="w-full" />
       <p class="ml-1">{{ props.title }}</p>

@@ -1,12 +1,11 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
-import { getDatabase, ref as dbRef, get, remove, set } from 'firebase/database'
-import CardList from '@/components/CardList.vue'
+import { getDatabase, ref as dbRef, get, remove, set, onValue } from 'firebase/database'
+import CardList from '../components/CardList.vue'
 import { inject } from 'vue'
 import { initializeApp } from 'firebase/app'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 
-const items = ref([])
-const { cart, addToCart, removeFromCart } = inject(['cart'])
 const firebaseConfig = {
   apiKey: 'AIzaSyCE2imVR50t0z4dVKgPKAoLvjtz6I8KRog',
   authDomain: 'sneakers-5c581.firebaseapp.com',
@@ -17,9 +16,14 @@ const firebaseConfig = {
   appId: '1:278974655722:web:e033d27d8c2a69f2c87b93'
 }
 
-// Инициализация Firebase
-initializeApp(firebaseConfig)
+const app = initializeApp(firebaseConfig)
+const database = getDatabase(app)
+const auth = getAuth()
+const items = ref([])
+const { cart, addToCart, removeFromCart } = inject(['cart'])
+const favorites = ref([])
 
+const isLoggedIn = ref(true)
 const onClickAddPlus = (item) => {
   if (!item.isAdded) {
     addToCart(item)
@@ -29,55 +33,69 @@ const onClickAddPlus = (item) => {
 }
 
 const handleFavoriteClick = async (item) => {
-  const database = getDatabase()
-  const favoriteRef = dbRef(database, `favorites/${item.id}`)
+  if (!auth.currentUser) {
+    console.error('Пользователь не авторизован')
+    return
+  }
+
+  const userId = auth.currentUser.uid
+  const favoriteRef = dbRef(database, `users/${userId}/favorites/${item.id}`)
 
   if (item.isFavorite) {
+    // Удаляем элемент из избранного в профиле пользователя
     await remove(favoriteRef)
+    // Обновляем локальное состояние
+    favorites.value = favorites.value.filter((favId) => favId !== item.id)
   } else {
+    // Добавляем элемент в избранное в профиле пользователя
     await set(favoriteRef, true)
+    // Обновляем локальное состояние
+    favorites.value.push(item.id)
   }
+  // Обновляем флаг избранного для элемента
   item.isFavorite = !item.isFavorite
-  if (!item.isFavorite) {
-    // Обновляем список элементов после удаления
-    items.value = items.value.filter((i) => i.id !== item.id)
-  }
 }
 
 const onClickRemove = async (item) => {
   await handleFavoriteClick(item) // Используем ту же логику для удаления из избранного
 }
 
-onMounted(async () => {
-  const database = getDatabase()
-  cart.value = JSON.parse(localStorage.getItem('cart')) || []
-
-  const itemsRef = dbRef(database, 'items')
-  const itemsSnapshot = await get(itemsRef)
-  let allItems = {}
-
-  if (itemsSnapshot.exists()) {
-    allItems = itemsSnapshot.val()
-  }
-
-  const favoritesRef = dbRef(database, 'favorites')
-  const favoritesSnapshot = await get(favoritesRef)
-  let favoriteIds = []
-
-  if (favoritesSnapshot.exists()) {
-    favoriteIds = Object.keys(favoritesSnapshot.val())
-  }
-
-  items.value = Object.entries(allItems)
-    .filter(([key]) => favoriteIds.includes(key))
-    .map(([key, value]) => ({
-      id: key,
-      ...value,
-      isFavorite: favoriteIds.includes(key),
-      isAdded: cart.value.some((cartItem) => cartItem.id === key)
-    }))
+onMounted(() => {
+  onAuthStateChanged(auth, (user) => {
+    isLoggedIn.value = user
+  })
 })
 
+onMounted(async () => {
+  onAuthStateChanged(auth, async (user) => {
+    isLoggedIn.value = !!user
+    if (user) {
+      const favoritesRef = dbRef(database, `users/${user.uid}/favorites`)
+      onValue(favoritesRef, async (snapshot) => {
+        if (snapshot.exists()) {
+          const favoriteIds = Object.keys(snapshot.val())
+          // Загрузите данные товаров для каждого ID
+          await loadFavoriteItems(favoriteIds)
+        } else {
+          items.value = []
+        }
+      })
+    }
+  })
+})
+const loadFavoriteItems = async (favoriteIds) => {
+  const loadedItems = []
+  for (const favoriteId of favoriteIds) {
+    const itemRef = dbRef(database, `items/${favoriteId}`)
+    const itemSnapshot = await get(itemRef)
+    if (itemSnapshot.exists()) {
+      // Помимо данных товара, добавляем поле isFavorite для управления отображением
+      const itemData = itemSnapshot.val()
+      loadedItems.push({ ...itemData, isFavorite: true })
+    }
+  }
+  items.value = loadedItems
+}
 watch(
   cart,
   () => {
@@ -85,6 +103,7 @@ watch(
   },
   { deep: true }
 )
+// watch(favorites, loadFavoriteItems, { immediate: true })
 </script>
 
 <template>

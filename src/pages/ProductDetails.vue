@@ -3,6 +3,7 @@ import { onMounted, ref, watch, inject, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { initializeApp } from 'firebase/app'
 import { getDatabase, ref as dbRef, get, set, remove } from 'firebase/database'
+import { getAuth } from 'firebase/auth'
 
 const swipeLeft = () => {
   if (currentImageIndex.value < productDetails.value.image_urls.length - 1) {
@@ -32,6 +33,7 @@ const goBack = () => {
 // Инициализация Firebase
 initializeApp(firebaseConfig)
 const database = getDatabase()
+const auth = getAuth() // Инициализация аутентификации Firebase
 
 const router = useRouter()
 const productId = ref(router.currentRoute.value.params.id)
@@ -125,33 +127,36 @@ const toggleCart = async () => {
   resetProductState() // Сбрасываем состояние товара
 }
 const toggleFavorite = async () => {
+  const currentUser = auth.currentUser
+  if (!currentUser) {
+    console.error('Пользователь не авторизован')
+    return
+  }
+
   const currentFavoriteState = isFavorite.value
+  const userFavoriteRef = dbRef(database, `users/${currentUser.uid}/favorites/${productId.value}`)
 
   try {
-    const favoriteRef = dbRef(database, `favorites/${productId.value}`)
     if (!currentFavoriteState) {
-      await set(favoriteRef, true)
+      await set(userFavoriteRef, true) // Добавляем товар в избранное пользователя
       localStorage.setItem(`favorite-${productId.value}`, 'true')
     } else {
-      await remove(favoriteRef)
+      await remove(userFavoriteRef) // Удаляем товар из избранного пользователя
       localStorage.removeItem(`favorite-${productId.value}`)
     }
     isFavorite.value = !currentFavoriteState
     console.log('Новое состояние избранного:', isFavorite.value)
-
-    resetProductState() // Сбрасываем состояние товара
   } catch (error) {
     console.error('Ошибка при обновлении избранного:', error)
   }
 }
-
 //
 </script>
 
 <!--Шаблон снизу-->
 <template>
   <div class="container mx-auto">
-    <div class="container">
+    <div class="container mt-5">
       <div class="flex items-center">
         <img
           @click="goBack"
