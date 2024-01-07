@@ -6,7 +6,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth'
 
 // Если вам нужны другие функции из Realtime Database, импортируйте их так
@@ -22,7 +24,18 @@ const firebaseConfig = {
   messagingSenderId: '278974655722',
   appId: '1:278974655722:web:e033d27d8c2a69f2c87b93'
 }
-
+const signInWithGoogle = async () => {
+  const provider = new GoogleAuthProvider()
+  try {
+    const result = await signInWithPopup(auth, provider)
+    // Пользователь успешно вошел через Google
+    // Здесь вы можете добавить логику после успешного входа
+    console.log(result.user)
+    // После успешного входа можно закрыть модальное окно входа
+  } catch (error) {
+    console.error('Ошибка входа через Google:', error)
+  }
+}
 const isLoggedIn = ref(true)
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
@@ -301,10 +314,28 @@ const props = defineProps({
       />
       <button
         @click="register"
-        class="transition w-full bg-blue-500 text-white py-3 rounded hover:bg-blue-600 cursor-pointer mb-4"
+        class="transition w-full bg-green-500 text-white py-3 rounded hover:bg-green-600 cursor-pointer mb-4"
       >
         Регистрация
+      </button>
+      <button
+        v-if="!isLoggedIn"
+        @click="signInWithGoogle"
+        class="google-sign-in-button transition w-full flex justify-center items-center bg-white text-gray-700 py-2 px-4 rounded shadow hover:shadow-md cursor-pointer mb-4"
+      >
+        <!-- Используйте вашу иконку Google -->
+        <img src="/icons8-google.svg" alt="Google Sign-In" class="w-6 h-6 mr-2" />
+        Войти через Google
       </button>
     </div>
   </div>
 </template>
+<style scoped>
+.google-sign-in-button {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.google-sign-in-button:hover {
+  background: #f5f5f5;
+}
+</style>
