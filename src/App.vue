@@ -81,16 +81,16 @@ const cart = ref([])
 const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.price, 0))
 const drawerOpen = ref(false)
 const isOrderHistoryOpen = ref(false) // Добавлено состояние для открытия истории заказов
-onMounted(() => {
-  auth.onAuthStateChanged(async (user) => {
-    if (user) {
-      const userProfile = await fetchUserProfile(user.uid)
-      // Обработка данных пользователя
-    } else {
-      showLoginModal.value = true
-    }
-  })
-})
+// onMounted(() => {
+//   auth.onAuthStateChanged(async (user) => {
+//     if (user) {
+//       const userProfile = await fetchUserProfile(user.uid)
+//       // Обработка данных пользователя
+//     } else {
+//       showLoginModal.value = true
+//     }
+//   })
+// })
 const isProfileOpen = ref(false) // Инициализация isProfileOpen
 
 const addToCart = async (item) => {

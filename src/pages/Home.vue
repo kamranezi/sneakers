@@ -306,6 +306,9 @@ const onChangeSearchInput = (event) => {
           <option value="11.5">11.5</option>
           <option value="12">12</option>
           <option value="13">13</option>
+          <option value="14">14</option>
+          <option value="14.5">14.5</option>
+          <option value="15">15</option>
         </select>
       </div>
     </div>

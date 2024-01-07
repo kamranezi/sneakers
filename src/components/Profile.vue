@@ -41,11 +41,28 @@ const loginPassword = ref('')
 
 const customerName = ref('')
 const customerEmail = ref('')
-const customerGender = ref('')
+const customerGender = ref('Gender')
 const customerAge = ref('')
 const customerShoeSize = ref('')
+const customerFavoriteBrand = ref('Adidas')
+const customerShoeFormat = ref('US')
 const favorites = ref([])
+const sizes = {
+  EU: [
+    36, 36.5, 37, 37.5, 38, 38.5, 39, 39.5, 40, 40.5, 41, 41.5, 42, 42.5, 43, 43.5, 44, 44.5, 45,
+    45.5, 46, 46.5, 47, 47.5, 48
+  ],
+  US: [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13],
+  UK: [5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12]
+}
 
+const selectedSizeFormat = ref('EU') // начальное значение
+const availableSizes = ref(sizes[selectedSizeFormat.value])
+
+const changeSizeFormat = (format) => {
+  selectedSizeFormat.value = format
+  availableSizes.value = sizes[format]
+}
 const loginUser = async () => {
   try {
     const userCredential = await signInWithEmailAndPassword(
@@ -68,11 +85,13 @@ const register = async () => {
     // Создание профиля пользователя с сохранением email
     try {
       await set(dbRef(database, `users/${userCredential.user.uid}`), {
+        name: '',
         email: email.value, // Сохраняем email
-        name: '', // Пустые начальные значения для остальных полей
         gender: '',
         age: '',
         size: '',
+        brand: '',
+        format: '',
         favorites: [], // Инициализация пустого массива для избранного
         orders: []
       })
@@ -124,6 +143,8 @@ onMounted(async () => {
         customerEmail.value = userData.email || ''
         customerGender.value = userData.gender || ''
         customerAge.value = userData.age || ''
+        customerShoeFormat.value = userData.format || ''
+        customerFavoriteBrand.value = userData.brand || ''
         customerShoeSize.value = userData.size ? String(userData.size) : ''
 
         // Получение и вывод избранных ID товаров пользователя
@@ -177,45 +198,56 @@ const props = defineProps({
         class="form-input mr-5 rounded-lg border border-gray-300 mb-4 p-2 smaller-select"
         v-model="customerGender"
       >
-        <option value="" disabled selected>Пол</option>
+        <option value="Gender" disabled selected>Пол</option>
         <option value="male">Мужской</option>
         <option value="female">Женский</option>
         <!-- Другие опции, если нужно -->
       </select>
 
+      <!--      <div>-->
+      <!--        <label for="customerAge">Ваш возраст:</label>-->
+      <!--        <input-->
+      <!--          id="customerAge"-->
+      <!--          type="number"-->
+      <!--          placeholder="Возраст"-->
+      <!--          class="w-1/6 rounded-lg ml-2 border border-gray-300 mb-4 p-2"-->
+      <!--          v-model="customerAge"-->
+      <!--        />-->
+      <!--      </div>-->
       <div>
-        <label for="customerAge">Ваш возраст:</label>
-        <input
-          id="customerAge"
-          type="number"
-          placeholder="Возраст"
-          class="w-1/6 rounded-lg ml-2 border border-gray-300 mb-4 p-2"
-          v-model="customerAge"
-        />
+        <label for="customerFavoriteBrand">Любимый бренд:</label>
+        <select
+          v-model="customerFavoriteBrand"
+          class="form-input w-1/3 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
+        >
+          <option value="Adidas">Adidas</option>
+          <option value="Nike">Nike</option>
+          <option value="Reebok">Reebok</option>
+          <option value="New Balance">New Balance</option>
+        </select>
+      </div>
+      <div>
+        <label for="customerShoeFormat">Формат размера:</label>
+        <select
+          id="customerShoeFormat"
+          v-model="selectedSizeFormat"
+          @change="changeSizeFormat(selectedSizeFormat)"
+        >
+          class="form-input w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
+          <option value="EU">EU</option>
+          <option value="US">US</option>
+          <option value="UK">UK</option>
+        </select>
       </div>
 
-      <label for="shoeSizeSelect">Размер обуви:</label>
+      <label for="customerShoeSize">Размер обуви:</label>
 
       <select
+        id="shoeSize"
         v-model="customerShoeSize"
-        class="form-input w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
+        class="form-input w-1/5 mt-4 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
       >
-        <option value="5">5</option>
-        <option value="5.5">5.5</option>
-        <option value="6">6</option>
-        <option value="6.5">6.5</option>
-        <option value="7">7</option>
-        <option value="7.5">7.5</option>
-        <option value="8">8</option>
-        <option value="8.5">8.5</option>
-        <option value="9">9</option>
-        <option value="9.5">9.5</option>
-        <option value="10">10</option>
-        <option value="10.5">10.5</option>
-        <option value="11">11</option>
-        <option value="11.5">11.5</option>
-        <option value="12">12</option>
-        <option value="13">13</option>
+        <option v-for="size in availableSizes" :key="size" :value="size">{{ size }}</option>
       </select>
     </div>
 
