@@ -172,7 +172,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <LoginModal v-if="showLoginModal" @close="showLoginModal = false" />
+  <!--  <LoginModal v-if="showLoginModal" @close="showLoginModal = false" />-->
 
   <Drawer v-if="drawerOpen" :total-price="totalPrice" @create-order="createOrder" />
   <Header :total-price="totalPrice" @open-drawer="openDrawer" />

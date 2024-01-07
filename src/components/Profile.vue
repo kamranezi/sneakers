@@ -45,47 +45,6 @@ const customerGender = ref('')
 const customerAge = ref('')
 const customerSize = ref('')
 const customerShoeSize = ref('')
-const updateProfile = async () => {
-  if (!auth.currentUser) {
-    console.error('Пользователь не авторизован')
-    return
-  }
-
-  const userData = {
-    name: customerName.value,
-    email: customerEmail.value,
-    gender: customerGender.value,
-    age: customerAge.value,
-    size: customerSize.value
-  }
-
-  try {
-    await set(dbRef(database, `users/${auth.currentUser.uid}`), userData)
-    console.log('Профиль обновлен')
-  } catch (error) {
-    console.error('Ошибка при обновлении профиля:', error)
-  }
-}
-const register = async () => {
-  console.log('Attempting to register:', email.value, password.value)
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value)
-    console.log('User registered:', userCredential.user)
-
-    // Создание профиля пользователя
-    try {
-      // Здесь мы записываем тестовое значение вместо пустого объекта
-      await set(dbRef(database, `users/${userCredential.user.uid}`), {
-        testValue: 'Тестовое значение'
-      })
-      console.log('User profile created')
-    } catch (error) {
-      console.error('Error creating user profile:', error)
-    }
-  } catch (error) {
-    console.error('Registration error:', error)
-  }
-}
 
 const loginUser = async () => {
   try {
@@ -100,6 +59,69 @@ const loginUser = async () => {
     console.error('Login error:', error)
   }
 }
+const register = async () => {
+  console.log('Attempting to register:', email.value, password.value)
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value)
+    console.log('User registered:', userCredential.user)
+
+    // Создание профиля пользователя с сохранением email
+    try {
+      await set(dbRef(database, `users/${userCredential.user.uid}`), {
+        email: email.value, // Сохраняем email
+        name: '', // Пустые начальные значения для остальных полей
+        gender: '',
+        age: '',
+        size: ''
+      })
+      console.log('User profile created')
+    } catch (error) {
+      console.error('Error creating user profile:', error)
+    }
+  } catch (error) {
+    console.error('Registration error:', error)
+  }
+}
+
+const updateProfile = async () => {
+  if (!auth.currentUser) {
+    console.error('Пользователь не авторизован')
+    return
+  }
+
+  const userData = {
+    name: customerName.value,
+    email: auth.currentUser.email, // Используйте email из учетных данных пользователя
+    gender: customerGender.value,
+    age: customerAge.value,
+    size: parseInt(customerShoeSize.value) // Преобразование в число
+  }
+
+  try {
+    await set(dbRef(database, `users/${auth.currentUser.uid}`), userData)
+    console.log('Профиль обновлен')
+  } catch (error) {
+    console.error('Ошибка при обновлении профиля:', error)
+  }
+}
+
+onMounted(() => {
+  onAuthStateChanged(auth, async (user) => {
+    isLoggedIn.value = !!user
+    if (user) {
+      const snapshot = await get(dbRef(database, `users/${user.uid}`))
+      if (snapshot.exists()) {
+        const data = snapshot.val()
+        // Обновление данных профиля
+        customerName.value = data.name || ''
+        customerEmail.value = data.email || ''
+        customerGender.value = data.gender || ''
+        customerAge.value = data.age || ''
+        customerShoeSize.value = data.size ? String(data.size) : '' // Преобразование в строку
+      }
+    }
+  })
+})
 
 // Выход пользователя
 const logoutUser = async () => {
@@ -111,7 +133,6 @@ const logoutUser = async () => {
   }
 }
 
-const customerMail = ref('')
 const props = defineProps({
   closeProfile: Function
 })
@@ -136,11 +157,11 @@ const props = defineProps({
       <input
         type="text"
         placeholder="Name"
-        class="form-input rounded-lg border border-gray-300 mb-4 p-2 mr-4"
+        class="form-input w-1/2 rounded-lg border border-gray-300 mb-4 p-2 mr-4"
         v-model="customerName"
       />
       <select
-        class="form-input rounded-lg border border-gray-300 mb-4 p-2 smaller-select"
+        class="form-input mr-5 rounded-lg border border-gray-300 mb-4 p-2 smaller-select"
         v-model="customerGender"
       >
         <option value="" disabled selected>Пол</option>
@@ -149,19 +170,23 @@ const props = defineProps({
         <!-- Другие опции, если нужно -->
       </select>
 
-      <input
-        type="number"
-        placeholder="Возраст"
-        class="smaller-select rounded-lg border border-gray-300 mb-4 p-2"
-        v-model="customerAge"
-      />
+      <div>
+        <label for="customerAge">Ваш возраст:</label>
+        <input
+          id="customerAge"
+          type="number"
+          placeholder="Возраст"
+          class="w-1/6 rounded-lg ml-2 border border-gray-300 mb-4 p-2"
+          v-model="customerAge"
+        />
+      </div>
+
+      <label for="shoeSizeSelect">Размер обуви:</label>
 
       <select
-        type="number"
         v-model="customerShoeSize"
-        class="form-input rounded-lg border border-gray-300 mb-4 p-2"
+        class="form-input w-1/6 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
       >
-        <option value="">Size</option>
         <option value="5">5</option>
         <option value="5.5">5.5</option>
         <option value="6">6</option>
@@ -238,11 +263,3 @@ const props = defineProps({
     </div>
   </div>
 </template>
-
-<style>
-.smaller-select {
-  /* Вы можете настроить размер здесь, например: */
-  width: 30%;
-  margin-right: 6px;
-}
-</style>
