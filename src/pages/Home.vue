@@ -1,6 +1,6 @@
 <script setup>
 import { initializeApp } from 'firebase/app'
-import { getDatabase, ref as firebaseRef, onValue, set, remove } from 'firebase/database'
+import { getDatabase, ref as firebaseRef, onValue, set, remove, update } from 'firebase/database'
 import { onMounted, ref, reactive, watch, computed } from 'vue'
 import { inject } from 'vue'
 import CardList from '../components/CardList.vue'
@@ -140,16 +140,24 @@ watch(
   { deep: true }
 )
 
-const addToFavorite = async (item) => {
-  const favoriteRef = firebaseRef(database, `favorites/${item.id}`)
-  item.isFavorite = !item.isFavorite
-  if (item.isFavorite) {
-    await set(favoriteRef, true)
-  } else {
-    await remove(favoriteRef)
+const addToFavorites = async (productId) => {
+  if (!auth.currentUser) {
+    console.error('Пользователь не авторизован')
+    return
   }
-}
 
+  // Получение текущего списка избранного
+  const userRef = dbRef(database, `users/${auth.currentUser.uid}`)
+  const snapshot = await get(userRef)
+  let favorites = snapshot.exists() ? snapshot.val().favorites || [] : []
+
+  // Добавление нового товара в список
+  favorites.push(productId)
+
+  // Обновление профиля пользователя
+  await update(userRef, { favorites })
+  console.log('Избранное обновлено')
+}
 const onChangeSelect = (event) => {
   filters.sortBy = event.target.value
   // fetchItems() вызывать, если вам нужно изменить запрос к базе данных на основе сортировки
