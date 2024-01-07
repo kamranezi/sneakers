@@ -1,11 +1,12 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { initializeApp } from 'firebase/app'
 import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  onAuthStateChanged
 } from 'firebase/auth'
 
 // Если вам нужны другие функции из Realtime Database, импортируйте их так
@@ -22,6 +23,12 @@ const firebaseConfig = {
   appId: '1:278974655722:web:e033d27d8c2a69f2c87b93'
 }
 
+const isLoggedIn = ref(true)
+onMounted(() => {
+  onAuthStateChanged(auth, (user) => {
+    isLoggedIn.value = user
+  })
+})
 // Инициализация Firebase
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
@@ -31,6 +38,34 @@ const email = ref('')
 const password = ref('')
 const loginEmail = ref('')
 const loginPassword = ref('')
+
+const customerName = ref('')
+const customerEmail = ref('')
+const customerGender = ref('')
+const customerAge = ref('')
+const customerSize = ref('')
+const customerShoeSize = ref('')
+const updateProfile = async () => {
+  if (!auth.currentUser) {
+    console.error('Пользователь не авторизован')
+    return
+  }
+
+  const userData = {
+    name: customerName.value,
+    email: customerEmail.value,
+    gender: customerGender.value,
+    age: customerAge.value,
+    size: customerSize.value
+  }
+
+  try {
+    await set(dbRef(database, `users/${auth.currentUser.uid}`), userData)
+    console.log('Профиль обновлен')
+  } catch (error) {
+    console.error('Ошибка при обновлении профиля:', error)
+  }
+}
 const register = async () => {
   console.log('Attempting to register:', email.value, password.value)
   try {
@@ -101,7 +136,7 @@ const props = defineProps({
       <input
         type="text"
         placeholder="Name"
-        class="form-input rounded-lg border border-gray-300 mb-4 p-2 mr-auto"
+        class="form-input rounded-lg border border-gray-300 mb-4 p-2 mr-4"
         v-model="customerName"
       />
       <select
@@ -122,35 +157,48 @@ const props = defineProps({
       />
 
       <select
-        class="form-input rounded-lg border border-gray-300 mb-4 p-2 smaller-select"
-        v-model="customerSize"
+        type="number"
+        v-model="customerShoeSize"
+        class="form-input rounded-lg border border-gray-300 mb-4 p-2"
       >
-        <option value="" disabled selected>Размер</option>
-        <!-- Опции для размера -->
+        <option value="">Size</option>
+        <option value="5">5</option>
+        <option value="5.5">5.5</option>
+        <option value="6">6</option>
+        <option value="6.5">6.5</option>
+        <option value="7">7</option>
+        <option value="7.5">7.5</option>
+        <option value="8">8</option>
+        <option value="8.5">8.5</option>
+        <option value="9">9</option>
+        <option value="9.5">9.5</option>
+        <option value="10">10</option>
+        <option value="10.5">10.5</option>
+        <option value="11">11</option>
+        <option value="11.5">11.5</option>
+        <option value="12">12</option>
+        <option value="13">13</option>
       </select>
-      <!--      <input-->
-      <!--        type="email"-->
-      <!--        placeholder="Email"-->
-      <!--        class="form-input rounded-lg border border-gray-300 mb-4 p-2"-->
-      <!--        v-model="loginEmail"-->
-      <!--      />-->
-      <!--      <input-->
-      <!--        type="password"-->
-      <!--        placeholder="Password"-->
-      <!--        class="form-input rounded-lg border border-gray-300 mb-4 p-2"-->
-      <!--        v-model="loginPassword"-->
-      <!--      />-->
-
-      <!-- другие поля профиля... -->
     </div>
 
     <button
-      class="transition w-full bg-blue-500 text-white py-3 rounded hover:bg-blue-600 cursor-pointer"
+      v-if="isLoggedIn"
+      class="transition w-full mb-4 bg-blue-500 text-white py-3 rounded hover:bg-blue-600 cursor-pointer"
       @click="updateProfile"
     >
       Обновить профиль
     </button>
-    <div class="login-section">
+
+    <button
+      v-if="isLoggedIn"
+      @click="logoutUser"
+      class="transition w-full bg-red-400 text-white py-3 rounded hover:bg-red-600 cursor-pointer mb-4"
+    >
+      Выйти
+    </button>
+
+    <!-- Форма регистрации -->
+    <div v-if="!isLoggedIn" class="registration-section">
       <input
         v-model="loginEmail"
         type="email"
@@ -169,16 +217,6 @@ const props = defineProps({
       >
         Войти
       </button>
-      <button
-        @click="logoutUser"
-        class="transition w-full bg-blue-500 text-white py-3 rounded hover:bg-blue-600 cursor-pointer mb-4"
-      >
-        Выйти
-      </button>
-    </div>
-
-    <!-- Форма регистрации -->
-    <div class="registration-section">
       <input
         v-model="email"
         type="email"
@@ -204,7 +242,7 @@ const props = defineProps({
 <style>
 .smaller-select {
   /* Вы можете настроить размер здесь, например: */
-  width: 20%;
-  margin-left: 4px;
+  width: 30%;
+  margin-right: 6px;
 }
 </style>

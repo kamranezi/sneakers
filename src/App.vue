@@ -31,13 +31,45 @@ const database = getDatabase(app)
 // const toggleMode = () => {
 //   isLoginMode.value = !isLoginMode.value
 // }
+const login = async () => {
+  try {
+    await signInWithEmailAndPassword(auth, email.value, password.value)
+    // Вход выполнен успешно
+  } catch (error) {
+    console.error(error)
+    // Обработка ошибок входа
+  }
+}
 
-const showLoginModal = ref(false)
+const fetchUserProfile = async (userId) => {
+  const userRef = dbRef(database, `users/${userId}`)
+  try {
+    const snapshot = await get(userRef)
+    if (snapshot.exists()) {
+      return snapshot.val()
+    } else {
+      console.error('No such user with UID:', userId)
+    }
+  } catch (error) {
+    console.error('Error fetching user profile:', error)
+  }
+}
+const showLoginModal = ref(true)
 
 const cart = ref([])
 const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.price, 0))
 const drawerOpen = ref(false)
 const isOrderHistoryOpen = ref(false) // Добавлено состояние для открытия истории заказов
+onMounted(() => {
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      const userProfile = await fetchUserProfile(user.uid)
+      // Обработка данных пользователя
+    } else {
+      showLoginModal.value = true
+    }
+  })
+})
 const isProfileOpen = ref(false) // Инициализация isProfileOpen
 
 const addToCart = async (item) => {

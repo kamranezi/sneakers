@@ -21,7 +21,14 @@ const firebaseConfig = {
 // Инициализация Firebase
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
+const isLoggedIn = ref(false)
 
+onMounted(() => {
+  const auth = getAuth()
+  onAuthStateChanged(auth, (user) => {
+    isLoggedIn.value = !!user
+  })
+})
 const database = getDatabase()
 
 const login = async () => {

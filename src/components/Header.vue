@@ -20,10 +20,8 @@ const toggleMenu = (event) => {
   }
   isMenuOpen.value = !isMenuOpen.value
 }
-
 const openProfile = () => {
   isProfileOpen.value = true
-  toggleMenu() // Закрыть меню при открытии профиля
 }
 
 const closeProfile = () => {
