@@ -2,6 +2,8 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import OrderHistory from './OrderHistory.vue' // Убедитесь, что путь к компоненту верный
 import { inject } from 'vue'
+import Profile from './Profile.vue' // Импортируйте ваш компонент профиля
+
 defineProps({
   totalPrice: Number,
   openOrderHistory: Function // Добавлено для вызова открытия истории заказов
@@ -9,14 +11,24 @@ defineProps({
 const emit = defineEmits(['openDrawer'])
 const isMenuOpen = ref(false)
 const orderHistoryState = inject('orderHistory')
+
+const { isOrderHistoryOpen, closeOrderHistory } = orderHistoryState
+const isProfileOpen = ref(false) // Добавлено для контроля видимости профиля
 const toggleMenu = (event) => {
   if (event) {
     event.stopPropagation()
   }
   isMenuOpen.value = !isMenuOpen.value
 }
-const { isOrderHistoryOpen, closeOrderHistory } = orderHistoryState
 
+const openProfile = () => {
+  isProfileOpen.value = true
+  toggleMenu() // Закрыть меню при открытии профиля
+}
+
+const closeProfile = () => {
+  isProfileOpen.value = false
+}
 const openOrderHistory = () => {
   isOrderHistoryOpen.value = true
   toggleMenu() // Закрыть меню после выбора пункта
@@ -92,9 +104,11 @@ onUnmounted(() => {
         </li>
       </router-link>
 
-      <li class="flex items-center cursor-pointer gap-1 md:gap-1 text-gray-500 hover:text-black">
+      <li
+        @click="openProfile"
+        class="flex items-center cursor-pointer gap-0.5 mr-2 md:gap-1 text-gray-500 hover:text-black"
+      >
         <img src="/profile.svg" alt="Profile" class="w-6 h-6" />
-
         <span class="hidden sm:block">Профиль</span>
       </li>
     </ul>
@@ -155,4 +169,5 @@ onUnmounted(() => {
     </div>
   </header>
   <OrderHistory v-if="isOrderHistoryOpen" />
+  <Profile v-if="isProfileOpen" :close-profile="closeProfile" />
 </template>

@@ -1,7 +1,7 @@
 // Импортируем только необходимые функции для инициализации Firebase
 import { initializeApp } from 'firebase/app'
 import { getDatabase } from 'firebase/database'
-
+import { getAuth } from 'firebase/auth'
 // Учетные данные для конфигурации вашего Firebase проекта
 const firebaseConfig = {
   apiKey: 'AIzaSyCE2imVR50t0z4dVKgPKAoLvjtz6I8KRog',
@@ -15,6 +15,7 @@ const firebaseConfig = {
 
 // Инициализация Firebase
 const app = initializeApp(firebaseConfig)
+const auth = getAuth(app)
 
 // Получение экземпляра базы данных Firebase
 const database = getDatabase(app)

@@ -256,14 +256,14 @@ const onClickAddPlus = (item) => {
         <img class="absolute left-3 top-1/2 -translate-y-1/2" src="/search.svg" alt="Search" />
         <input
           @input="onChangeSearchInput"
-          class="border rounded-lg py-1 pl-8 outline-none focus:border-gray-400 text-xs md:text-sm w-full"
+          class="border rounded-lg py-1 pl-8 h-8 outline-none focus:border-gray-400 text-xs md:text-sm w-full"
           type="text"
           placeholder="Поиск..."
         />
       </div>
       <select
         @change="onChangeSelect"
-        class="border rounded-lg py-1 px-2 outline-none focus:border-gray-400 text-xs md:text-sm w-full max-w-[200px]"
+        class="border rounded-lg py-1 px-2 h-8 outline-none focus:border-gray-400 text-xs md:text-sm w-full max-w-[200px]"
       >
         <option value="name">По популярности</option>
         <option value="price">Сначала дешевые</option>
@@ -375,7 +375,7 @@ const onClickAddPlus = (item) => {
 .filter-section {
   display: flex;
   align-items: flex-start; /* Выравнивание элементов по верху */
-  margin-top: -2px; /* Удаление верхнего отступа */
+  margin-top: 2px; /* Удаление верхнего отступа */
 }
 
 .gender-filter,
@@ -402,7 +402,7 @@ const onClickAddPlus = (item) => {
 }
 .size-selector select {
   border: 1px solid #cccccc; /* Цвет и толщина границы */
-  padding: 1px 12px; /* Отступы внутри селектора */
+  padding: 2px 12px; /* Отступы внутри селектора */
   border-radius: 4px; /* Скругление углов */
 }
 @media (max-width: 600px) {
