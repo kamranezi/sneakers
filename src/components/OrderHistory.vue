@@ -38,28 +38,35 @@
 import { ref, onMounted, inject } from 'vue'
 import { getDatabase, ref as dbRef, onValue } from 'firebase/database'
 import OrdersList from '@/components/OrdersList.vue'
+import { getAuth } from 'firebase/auth' // Импортируем getAuth для получения текущего пользователя
 
+// Inject the authentication state
+const auth = getAuth() // Инициализируем auth
 const orders = ref([])
 const orderHistoryState = inject('orderHistory')
 const { closeOrderHistory } = orderHistoryState
 
 onMounted(() => {
   const database = getDatabase()
-  const ordersRef = dbRef(database, 'orders')
+  const currentUser = auth.currentUser // Получаем текущего пользователя
 
-  onValue(ordersRef, (snapshot) => {
-    const data = snapshot.val()
-    const loadedOrders = []
+  if (currentUser) {
+    const userOrdersRef = dbRef(database, `users/${currentUser.uid}/orders`) // Путь к заказам конкретного пользователя
 
-    for (const id in data) {
-      loadedOrders.push({
-        id,
-        ...data[id],
-        createdAt: new Date(data[id].createdAt).toLocaleDateString() // Format the date
-      })
-    }
+    onValue(userOrdersRef, (snapshot) => {
+      const data = snapshot.val()
+      const loadedOrders = []
 
-    orders.value = loadedOrders
-  })
+      for (const id in data) {
+        loadedOrders.push({
+          id,
+          ...data[id],
+          createdAt: new Date(data[id].createdAt).toLocaleDateString() // Format the date
+        })
+      }
+
+      orders.value = loadedOrders
+    })
+  }
 })
 </script>

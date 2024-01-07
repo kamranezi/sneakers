@@ -140,19 +140,25 @@ const openDrawer = () => {
   drawerOpen.value = true
 }
 const createOrder = async () => {
-  if (cart.value.every((item) => item.size)) {
-    const database = getDatabase()
-    const ordersRef = dbRef(database, 'orders')
-    const newOrderRef = push(ordersRef) // Получаем новую ссылку для заказа
+  if (auth.currentUser && cart.value.every((item) => item.size)) {
+    const userId = auth.currentUser.uid
+    const userOrdersRef = dbRef(database, `users/${userId}/orders`)
+    const generalOrdersRef = dbRef(database, 'orders')
+    const newOrderRef = push(generalOrdersRef) // Получаем новую ссылку для общего заказа
 
     const order = {
       items: cart.value,
       totalPrice: totalPrice.value,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      userId: userId // Сохраняем ID пользователя в общем заказе
     }
 
     try {
+      // Создаем заказ в общем каталоге orders
       await set(newOrderRef, order)
+      // Создаем копию заказа в каталоге заказов пользователя
+      await set(dbRef(database, `users/${userId}/orders/${newOrderRef.key}`), order)
+
       // Остальная логика после создания заказа...
       cart.value = []
       localStorage.removeItem('cart')
@@ -163,6 +169,7 @@ const createOrder = async () => {
     console.error('Размер для всех товаров должен быть выбран')
   }
 }
+
 watch(
   cart,
   (newCart) => {
