@@ -50,15 +50,15 @@ onUnmounted(() => {
 //
 <template>
   <header
-    class="flex justify-between items-center border-b border-slate-400 bg-slate-50 px-4 py-2 md:px-8 md:py-4 fixed top-0 left-0 right-0 z-10"
+    class="flex justify-between mb-2 items-center border-b border-slate-400 bg-slate-50 px-4 py-2 md:px-8 md:py-4 fixed top-0 left-0 right-0 z-10"
   >
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-1">
       <button
         @click="toggleMenu($event)"
         class="p-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
       >
         <svg
-          class="h-6 w-6"
+          class="h-8 w-8"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -77,8 +77,12 @@ onUnmounted(() => {
         ><div class="flex items-center gap-4">
           <img src="/Logo1.png" alt="Logo" class="w-12 h-12" />
           <div>
-            <h2 class="text-xl md:text-2xl font-bold uppercase tracking-wide">Sneakers</h2>
-            <p class="text-slate-500 text-sm md:text-base">
+            <h2
+              class="text-lg sm:text-xl md:text-2xl lg:text-2xl font-bold uppercase tracking-wide"
+            >
+              Sneakers
+            </h2>
+            <p class="hidden sm:block text-slate-500 md:text-xl lg:text-lg break-words">
               Originals from <img src="/icons8-сша-48.png" alt="USA flag" class="inline h-6" /> USA
             </p>
           </div>
@@ -89,14 +93,14 @@ onUnmounted(() => {
     <ul class="flex items-center gap-2 md:gap-4">
       <li
         @click="() => emit('openDrawer')"
-        class="flex items-center cursor-pointer gap-0.5 mr-2 md:gap-1 text-gray-500 hover:text-black"
+        class="flex items-center cursor-pointer gap-0.5 mr-2 sm:gap-1 text-gray-500 hover:text-black"
       >
         <img src="/cart.svg" alt="Cart" class="w-6 h-6" />
         <b>${{ totalPrice }}</b>
       </li>
 
       <router-link to="/favorites">
-        <li class="flex items-center cursor-pointer gap-1 md:gap-1 text-gray-500 hover:text-black">
+        <li class="flex items-center cursor-pointer gap-1 sm:gap-1 text-gray-500 hover:text-black">
           <img src="/heart.svg" alt="Favorite" class="w-6 h-6" />
           <span class="hidden sm:block">Избранное</span>
         </li>
@@ -104,7 +108,7 @@ onUnmounted(() => {
 
       <li
         @click="openProfile"
-        class="flex items-center cursor-pointer gap-0.5 mr-2 md:gap-1 text-gray-500 hover:text-black"
+        class="flex items-center cursor-pointer gap-0.5 mr-2 sm:gap-1 text-gray-500 hover:text-black"
       >
         <img src="/profile.svg" alt="Profile" class="w-6 h-6" />
         <span class="hidden sm:block">Профиль</span>

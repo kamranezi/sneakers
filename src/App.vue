@@ -206,7 +206,7 @@ onMounted(() => {
   <Header :total-price="totalPrice" @open-drawer="openDrawer" />
   <Profile v-if="isProfileOpen" :close-profile="closeProfile" />
 
-  <div class="bg-white w-full m-auto rounded-xl shadow-xl p-4 mt-14">
+  <div class="bg-white w-full m-auto rounded-xl shadow-xl p-4 mt-8 sm:mt-8 md:mt-12 lg:mt-14">
     <div class="md:p-0.5">
       <router-view></router-view>
     </div>

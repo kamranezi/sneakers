@@ -108,13 +108,14 @@ watch(
 
 <template>
   <div>
-    <h2 class="text-2xl font-bold mb-6">Избранное</h2>
+    <h2 class="text-2xl mt-6 font-bold mb-6">Избранное</h2>
     <div v-if="items.length === 0" class="text-center transition-opacity duration-700" key="empty">
       <h3 class="text-lg font-medium mb-4">Здесь пока пусто</h3>
       <img
         src="https://i.ibb.co/cbtNyW2/DALL-E-2024-01-03-14-26-46-A-pair-of-legs-wearing-jeans-standing-on-a-street-with-transparent-outlin.png"
         alt="Пусто"
         class="mx-auto opacity-40"
+        style="max-width: 90%; height: auto"
       />
     </div>
     <transition-group name="list" tag="div" class="list" v-else>
@@ -128,3 +129,29 @@ watch(
     </transition-group>
   </div>
 </template>
+<style scoped>
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .list {
+    grid-template-columns: 1fr;
+    /* Одна колонка на маленьких экранах */
+  }
+}
+
+.text-2xl {
+  font-size: 1.5rem; /* Меньше размер шрифта на мобильных устройствах */
+}
+
+@media (min-width: 768px) {
+  .text-2xl {
+    font-size: 2rem; /* Больше размер шрифта на планшетах и выше */
+  }
+}
+
+/* Дополнительные стили для адаптации других элементов */
+</style>

@@ -49,8 +49,6 @@ const database = getDatabase()
 
 const email = ref('')
 const password = ref('')
-const loginEmail = ref('')
-const loginPassword = ref('')
 
 const customerName = ref('')
 const customerEmail = ref('')
@@ -78,11 +76,7 @@ const changeSizeFormat = (format) => {
 }
 const loginUser = async () => {
   try {
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      loginEmail.value,
-      loginPassword.value
-    )
+    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value)
     console.log('Logged in:', userCredential.user)
     // Дополнительные действия после входа...
   } catch (error) {
@@ -245,8 +239,8 @@ const props = defineProps({
           id="customerShoeFormat"
           v-model="selectedSizeFormat"
           @change="changeSizeFormat(selectedSizeFormat)"
+          class="form-select w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
         >
-          class="form-input w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
           <option value="EU">EU</option>
           <option value="US">US</option>
           <option value="UK">UK</option>
@@ -258,7 +252,7 @@ const props = defineProps({
       <select
         id="shoeSize"
         v-model="customerShoeSize"
-        class="form-input w-1/5 mt-4 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
+        class="form-input w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
       >
         <option v-for="size in availableSizes" :key="size" :value="size">{{ size }}</option>
       </select>
@@ -282,42 +276,36 @@ const props = defineProps({
 
     <!-- Форма регистрации -->
     <div v-if="!isLoggedIn" class="registration-section">
-      <input
-        v-model="loginEmail"
-        type="email"
-        placeholder="Email для входа"
-        class="form-input rounded-lg border border-gray-300 mb-4 p-2"
-      />
-      <input
-        v-model="loginPassword"
-        type="password"
-        placeholder="Пароль для входа"
-        class="form-input rounded-lg border border-gray-300 mb-4 p-2"
-      />
-      <button
-        @click="loginUser"
-        class="transition w-full bg-blue-500 text-white py-3 rounded hover:bg-blue-600 cursor-pointer mb-4"
-      >
-        Войти
-      </button>
-      <input
-        v-model="email"
-        type="email"
-        placeholder="Email для регистрации"
-        class="form-input rounded-lg border border-gray-300 mb-4 p-2"
-      />
-      <input
-        v-model="password"
-        type="password"
-        placeholder="Пароль для регистрации"
-        class="form-input rounded-lg border border-gray-300 mb-4 p-2"
-      />
-      <button
-        @click="register"
-        class="transition w-full bg-green-500 text-white py-3 rounded hover:bg-green-600 cursor-pointer mb-4"
-      >
-        Регистрация
-      </button>
+      <div class="mb-4">
+        <input
+          v-model="email"
+          type="email"
+          placeholder="Email для входа"
+          class="form-input rounded-lg border border-gray-300 p-2"
+        />
+      </div>
+      <div class="mb-4">
+        <input
+          v-model="password"
+          type="password"
+          placeholder="Пароль для входа"
+          class="form-input rounded-lg border border-gray-300 p-2"
+        />
+      </div>
+      <div class="flex flex-row justify-between mb-4">
+        <button
+          @click="loginUser"
+          class="w-1/2 bg-blue-500 text-white py-3 mr-3 rounded-md hover:bg-blue-600 cursor-pointer"
+        >
+          Войти
+        </button>
+        <button
+          @click="register"
+          class="w-1/2 bg-green-500 text-white py-3 rounded-md hover:bg-green-600 cursor-pointer"
+        >
+          Регистрация
+        </button>
+      </div>
       <button
         v-if="!isLoggedIn"
         @click="signInWithGoogle"
