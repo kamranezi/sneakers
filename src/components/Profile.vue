@@ -49,6 +49,7 @@ const database = getDatabase()
 
 const email = ref('')
 const password = ref('')
+const notificationMessage = ref('') // Для хранения сообщения уведомления
 
 const customerName = ref('')
 const customerEmail = ref('')
@@ -78,7 +79,10 @@ const loginUser = async () => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value)
     console.log('Logged in:', userCredential.user)
-    // Дополнительные действия после входа...
+    notificationMessage.value = 'Вы успешно вошли в систему!'
+    setTimeout(() => (notificationMessage.value = ''), 3000) // Очистка уведомления через 3 секунды
+
+    // Уведомление об успешном входе
   } catch (error) {
     console.error('Login error:', error)
   }
@@ -169,8 +173,13 @@ const logoutUser = async () => {
   try {
     await signOut(auth)
     console.log('Logged out')
+    notificationMessage.value = 'Вы вышли из системы, для покупок авторизуйтесь'
+    setTimeout(() => (notificationMessage.value = ''), 4000)
+
+    // Уведомление об успешном выходе
   } catch (error) {
     console.error('Logout error:', error)
+    notificationMessage.value = 'Ошибка выхода: ' + error.message // Уведомление об ошибке
   }
 }
 
@@ -179,10 +188,12 @@ const props = defineProps({
 })
 </script>
 <template>
-  <div class="fixed inset-0 bg-black opacity-70 z-30 hidden sm:block"></div>
+  <div class="fixed inset-0 bg-black opacity-70 z-10 hidden sm:block"></div>
 
-  <div class="fixed top-0 sm:right-0 h-full sm:w-96 w-120 bg-white z-30 p-4 sm:p-8 overflow-y-auto">
+  <div class="fixed top-0 right-0 h-full w-96 bg-white z-40 p-8 overflow-y-auto">
     <div class="flex items-center gap-5 mb-4">
+      <button @click="loginWithTelegram">Войти через Telegram</button>
+
       <img
         @click="closeProfile"
         src="/arrow-left.svg"
@@ -315,6 +326,9 @@ const props = defineProps({
         <img src="/icons8-google.svg" alt="Google Sign-In" class="w-6 h-6 mr-2" />
         Войти через Google
       </button>
+      <div v-if="notificationMessage" class="notification">
+        {{ notificationMessage }}
+      </div>
     </div>
   </div>
 </template>
