@@ -36,10 +36,10 @@ onMounted(() => {
 </script>
 <template>
   <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-30">
-    <div class="fixed top-0 left-0-0 h-full items-center justify-center min-h-screen z-20">
-      <div class="max-w-4xl mx-auto bg-white shadow overflow-hidden sm:rounded-md">
+    <div class="fixed top-0 left-0 w-full h-full sm:h-full sm:min-h-screen z-20 flex flex-col">
+      <div class="flex-grow overflow-auto sm:max-w-4xl sm:mx-auto bg-white shadow sm:rounded-md">
         <h2 class="text-2xl font-bold p-6">История заказов</h2>
-        <ul class="divide-y divide-gray-200">
+        <ul class="divide-y divide-gray-200 max-h-none">
           <li v-for="order in orders" :key="order.id">
             <div class="block hover:bg-gray-50">
               <div class="px-8 py-3">
@@ -63,12 +63,14 @@ onMounted(() => {
             </div>
           </li>
         </ul>
-        <button
-          @click="closeOrderHistory"
-          class="mt-4 mb-2 w-1/2 ml-4 bg-indigo-600 text-white font-medium p-2 hover:bg-indigo-700 rounded-lg transition duration-300 ease-in-out"
-        >
-          Закрыть
-        </button>
+        <div class="flex justify-end">
+          <button
+            @click="closeOrderHistory"
+            class="mr-2 w-1/2 mb-8 bg-indigo-600 text-white font-medium p-2 hover:bg-indigo-700 rounded-lg transition duration-300 ease-in-out"
+          >
+            Закрыть
+          </button>
+        </div>
       </div>
     </div>
   </div>

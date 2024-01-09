@@ -192,7 +192,7 @@ const props = defineProps({
 
   <div class="fixed top-0 right-0 h-full w-96 bg-white z-40 p-8 overflow-y-auto">
     <div class="flex items-center gap-5 mb-4">
-      <button @click="loginWithTelegram">Войти через Telegram</button>
+      <!--      <button @click="loginWithTelegram">Войти через Telegram</button>-->
 
       <img
         @click="closeProfile"
