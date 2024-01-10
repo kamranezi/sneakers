@@ -87,7 +87,7 @@ const favoritesItems = ref([]) // Если используется Vue 3
 
 //Пагинация
 const currentPage = ref(1)
-const itemsPerPage = 20 // Вы можете изменить это число в зависимости от желаемого количества элементов на странице
+const itemsPerPage = 30 // Вы можете изменить это число в зависимости от желаемого количества элементов на странице
 const totalPages = computed(() => Math.ceil(items.value.length / itemsPerPage))
 const paginatedItems = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage

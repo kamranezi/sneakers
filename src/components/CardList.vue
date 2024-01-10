@@ -21,6 +21,7 @@ onMounted(() => {
       :key="item.id"
       :id="item.id"
       :title="item.title"
+      :brand="item.brand"
       :imageUrl="item.imageUrl"
       :price="item.price"
       :on-favorite-click="() => emit('addToFavorite', item)"

@@ -7,6 +7,8 @@ import { getDatabase, ref as dbRef, get } from 'firebase/database'
 const props = defineProps({
   id: Number,
   title: String,
+  brand: String,
+  category: String,
   imageUrl: String,
   colors: Array,
   price: Number,
@@ -54,11 +56,13 @@ onMounted(async () => {
         class="absolute bottom-1 right-1 w-8 h-8 border border-red-200 rounded-md md:w-10 md:h-10"
       />
       <div class="w-full relative pb-[100%]">
-        <!-- Проценты padding-bottom устанавливают соотношение сторон -->
         <img
           :src="props.imageUrl"
           alt="Sneaker"
-          class="absolute w-full h-full object-cover object-top left-0 top-0"
+          :class="{
+            'absolute w-full h-full object-cover object-top left-0 top-0': true,
+            'mirror-image': props.brand === 'vans'
+          }"
         />
       </div>
       <p class="ml-1">{{ props.title }}</p>
@@ -69,4 +73,8 @@ onMounted(async () => {
     </div>
   </div>
 </template>
-<style></style>
+<style>
+.mirror-image {
+  transform: scaleX(-1);
+}
+</style>
