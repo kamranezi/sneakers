@@ -15,7 +15,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1" v-auto-animate>
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4" v-auto-animate>
     <Card
       v-for="item in items"
       :key="item.id"
@@ -30,3 +30,16 @@ onMounted(() => {
     />
   </div>
 </template>
+<style>
+/* CSS для отключения анимации на мобильных устройствах */
+@media only screen and (max-width: 768px) {
+  /* измените значение max-width по вашему усмотрению */
+  .grid[v-auto-animate] {
+    /* Здесь вы можете переопределить или полностью отключить анимацию */
+    animation: none !important;
+  }
+}
+.grid {
+  column-gap: 5px; /* Здесь вы можете указать нужный размер просвета */
+}
+</style>

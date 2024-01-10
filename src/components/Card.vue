@@ -1,6 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { getDatabase, ref as dbRef, get } from 'firebase/database'
 
 // Удаляем isAdded и onAddClick из props
@@ -8,13 +8,17 @@ const props = defineProps({
   id: Number,
   title: String,
   imageUrl: String,
+  colors: Array,
   price: Number,
   isFavorite: Boolean,
   onFavoriteClick: Function
 })
-
+const colorsCount = computed(() => {
+  return productDetails.value.colors?.length > 0
+    ? `${productDetails.value.colors.length} цветов доступно`
+    : 'Уточняйте по размерам'
+})
 const router = useRouter()
-
 const goToProductDetails = () => {
   router.push(`/product/${props.id}`)
 }
@@ -39,22 +43,30 @@ onMounted(async () => {
 </script>
 <template>
   <div
-    class="relative bg-white border border-slate-100 rounded-2xl md:p-3 cursor-pointer transition hover:-translate-y-2 hover:shadow-xl flex flex-col h-full"
+    class="relative bg-white border border-slate-100 rounded-b-lg cursor-pointer transition hover:-translate-y-2 hover:shadow-xl flex flex-col h-full"
     @click="goToProductDetails"
   >
     <div class="flex-grow">
       <img
-        @click.stop="onFavoriteClick(item)"
+        @click.stop="onFavoriteClick"
         :src="!props.isFavorite ? '/like-1.svg' : '/like-2.svg'"
         alt="like"
-        class="absolute top-1 left-1 w-8 h-8 sm:w-8 sm:h-8 md:w-10 md:h-10"
+        class="absolute bottom-1 right-1 w-8 h-8 border border-red-200 rounded-md md:w-10 md:h-10"
       />
-      <img :src="props.imageUrl" alt="Sneaker" class="w-full" />
+      <div class="w-full relative pb-[100%]">
+        <!-- Проценты padding-bottom устанавливают соотношение сторон -->
+        <img
+          :src="props.imageUrl"
+          alt="Sneaker"
+          class="absolute w-full h-full object-cover object-top left-0 top-0"
+        />
+      </div>
       <p class="ml-1">{{ props.title }}</p>
-      <div class="text-sm ml-1 text-gray-500 mb-3">8 цветов доступно</div>
+      <div class="text-sm ml-1 mb-0.5 text-gray-500">{{ colorsCount }}</div>
     </div>
-    <div class="flex justify-between items-center mt-3">
+    <div class="flex justify-between">
       <b class="text-lg ml-1 mb-1 sm:text-xl">${{ props.price }}</b>
     </div>
   </div>
 </template>
+<style></style>

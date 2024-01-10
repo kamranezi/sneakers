@@ -51,9 +51,8 @@ const loadProductDetails = async () => {
     const snapshot = await get(productRef)
     if (snapshot.exists()) {
       productDetails.value = snapshot.val()
-      // Обновляем colors, используя image_urls
-      productDetails.value.colors = productDetails.value.image_urls.map((url, index) => ({
-        colorName: `Цвет ${index + 1}`,
+      // Обновляем, используя image_urls
+      productDetails.value.images = productDetails.value.image_urls.map((url, index) => ({
         imageUrl: url
       }))
     } else {
@@ -155,7 +154,7 @@ const toggleFavorite = async () => {
 
 <!--Шаблон снизу-->
 <template>
-  <div class="flex items-center mt-4">
+  <div class="flex items-center mt-5">
     <img
       @click="goBack"
       src="/back1.png"
@@ -187,7 +186,7 @@ const toggleFavorite = async () => {
             <!-- Точки для переключения слайдов -->
             <div class="absolute bottom-4 left-0 right-0 mx-1 flex justify-center">
               <button
-                v-for="(color, index) in productDetails.colors"
+                v-for="(image, index) in productDetails.images"
                 :key="index"
                 @click="currentImageIndex = index"
                 class="p-2 mx-1 rounded-full"
@@ -227,7 +226,7 @@ const toggleFavorite = async () => {
           v-for="size in productDetails.sizes && productDetails.sizes.US"
           :key="size"
           @click="selectSize(size)"
-          class="w-2/5 h-8 sm:w-1/4 sm:h-12 border border-black rounded-md cursor-pointer transition-colors duration-300"
+          class="w-20 h-8 sm:w-1/6 sm:h-12 border border-black rounded-md cursor-pointer transition-colors duration-300"
           :class="{
             'bg-blue-500 text-white': size === selectedSize,
             'hover:bg-blue-300': size !== selectedSize
@@ -276,6 +275,15 @@ const toggleFavorite = async () => {
             Убрать из избранного
           </button>
         </div>
+      </div>
+      <div class="flex flex-wrap mt-4">
+        <img
+          v-for="(color, index) in productDetails.colors"
+          :key="index"
+          :src="color"
+          class="h-12 w-12 md:h-20 md:w-20 object-cover mx-1 my-1 rounded-lg cursor-pointer"
+          @click="currentImageIndex = index"
+        />
       </div>
       <!-- Описание продукта -->
       <div class="description mt-4 md:max-w-3xl lg:w-4/5">
