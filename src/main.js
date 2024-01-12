@@ -19,7 +19,11 @@ const routes = [
 ]
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    // всегда скроллить вверх при смене маршрутов
+    return { top: 0 }
+  }
 })
 app.use(VueTelInput)
 
