@@ -39,12 +39,7 @@ const router = useRouter()
 const productId = ref(router.currentRoute.value.params.id)
 const productDetails = ref({})
 const unavailableSizes = ref([]) // Новая реактивная ссылка для хранения недоступных размеров
-const availableSizes = computed(() => {
-  if (!productDetails.value.sizes || !productDetails.value.sizes.US) {
-    return []
-  }
-  return productDetails.value.sizes.US.filter((size) => !unavailableSizes.value.includes(size))
-})
+
 const currentImageIndex = ref(0)
 const isFavorite = ref(false)
 // Интеграция состояния корзины и избранного
@@ -232,13 +227,15 @@ const toggleFavorite = async () => {
       <h2 class="text-lg sm:text-xl font-semibold mb-2">Sizes (US):</h2>
       <div class="flex flex-wrap gap-2 mb-4">
         <button
-          v-for="size in availableSizes"
+          v-for="size in productDetails.sizes && productDetails.sizes.US"
           :key="size"
           @click="selectSize(size)"
+          :disabled="unavailableSizes.includes(size)"
           class="w-20 h-8 sm:w-1/6 sm:h-12 border border-black rounded-md cursor-pointer transition-colors duration-300"
           :class="{
             'bg-blue-500 text-white': size === selectedSize,
-            'hover:bg-blue-300': size !== selectedSize
+            'hover:bg-blue-300': size !== selectedSize && !unavailableSizes.includes(size),
+            'disabled-size': unavailableSizes.includes(size)
           }"
         >
           {{ size }}
@@ -304,3 +301,9 @@ const toggleFavorite = async () => {
     </div>
   </div>
 </template>
+<style>
+.disabled-size {
+  opacity: 0.4;
+  text-decoration: line-through; /* Перечеркивание */
+}
+</style>
