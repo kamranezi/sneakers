@@ -38,6 +38,13 @@ const auth = getAuth() // Инициализация аутентификаци�
 const router = useRouter()
 const productId = ref(router.currentRoute.value.params.id)
 const productDetails = ref({})
+const unavailableSizes = ref([]) // Новая реактивная ссылка для хранения недоступных размеров
+const availableSizes = computed(() => {
+  if (!productDetails.value.sizes || !productDetails.value.sizes.US) {
+    return []
+  }
+  return productDetails.value.sizes.US.filter((size) => !unavailableSizes.value.includes(size))
+})
 const currentImageIndex = ref(0)
 const isFavorite = ref(false)
 // Интеграция состояния корзины и избранного
@@ -51,6 +58,8 @@ const loadProductDetails = async () => {
     const snapshot = await get(productRef)
     if (snapshot.exists()) {
       productDetails.value = snapshot.val()
+      unavailableSizes.value = productDetails.value.unavailable_sizes || [] // Получаем недоступные размеры из данных продукта
+
       // Обновляем, используя image_urls
       productDetails.value.images = productDetails.value.image_urls.map((url, index) => ({
         imageUrl: url
@@ -223,7 +232,7 @@ const toggleFavorite = async () => {
       <h2 class="text-lg sm:text-xl font-semibold mb-2">Sizes (US):</h2>
       <div class="flex flex-wrap gap-2 mb-4">
         <button
-          v-for="size in productDetails.sizes && productDetails.sizes.US"
+          v-for="size in availableSizes"
           :key="size"
           @click="selectSize(size)"
           class="w-20 h-8 sm:w-1/6 sm:h-12 border border-black rounded-md cursor-pointer transition-colors duration-300"

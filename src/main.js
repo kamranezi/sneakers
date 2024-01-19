@@ -30,3 +30,15 @@ app.use(VueTelInput)
 app.use(router)
 app.use(autoAnimatePlugin)
 app.mount('#app')
+if (window.Telegram?.WebApp) {
+  // Обработка события кнопки "Назад" Telegram Web App
+  Telegram.WebApp.onEvent('backButton', () => {
+    // Используем историю роутера Vue для навигации назад
+    if (router.currentRoute.value.name !== 'Home') {
+      router.back()
+    } else {
+      // Если мы находимся на главной странице, закрываем веб-приложение
+      Telegram.WebApp.close()
+    }
+  })
+}

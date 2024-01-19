@@ -24,13 +24,6 @@ const { cart, addToCart, removeFromCart } = inject(['cart'])
 const favorites = ref([])
 
 const isLoggedIn = ref(true)
-const onClickAddPlus = (item) => {
-  if (!item.isAdded) {
-    addToCart(item)
-  } else {
-    removeFromCart(item)
-  }
-}
 
 const handleFavoriteClick = async (item) => {
   if (!auth.currentUser) {
@@ -122,7 +115,6 @@ watch(
       <CardList
         :items="items"
         @add-to-favorite="handleFavoriteClick"
-        @add-to-cart="onClickAddPlus"
         @remove-from-cart="onClickRemove"
         key="favorites-list"
       />

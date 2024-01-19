@@ -72,19 +72,6 @@ onMounted(async () => {
 
 // Функция для удаления из избранного
 
-const loadFavoriteItems = async () => {
-  const loadedItems = []
-  for (const favoriteId of favorites.value) {
-    const itemRef = dbRef(database, `items/${favoriteId}`)
-    const itemSnapshot = await get(itemRef)
-    if (itemSnapshot.exists()) {
-      loadedItems.push(itemSnapshot.val())
-    }
-  }
-  items.value = loadedItems
-}
-const favoritesItems = ref([]) // Если используется Vue 3
-
 //Пагинация
 const currentPage = ref(1)
 const itemsPerPage = 30 // Вы можете изменить это число в зависимости от желаемого количества элементов на странице
@@ -94,9 +81,15 @@ const paginatedItems = computed(() => {
   const end = start + itemsPerPage
   return items.value.slice(start, end)
 })
-
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth' // Для плавного скроллинга
+  })
+}
 const goToPage = (pageNumber) => {
   currentPage.value = pageNumber
+  scrollToTop()
 }
 const rawItems = ref([])
 const filters = reactive({
@@ -192,14 +185,7 @@ const fetchUserFavorites = async () => {
     userFavorites.value = []
   }
 }
-const fetchItemsAndUpdateFavorites = async () => {
-  await fetchItems()
-  await fetchUserFavorites()
-  // Обновление флага isFavorite для каждого элемента в rawItems
-  rawItems.value.forEach((item) => {
-    item.isFavorite = userFavorites.value.includes(item.id)
-  })
-}
+
 onMounted(() => {
   cart.value = JSON.parse(localStorage.getItem('cart')) || []
   fetchItems().then(fetchUserFavorites) // Первоначально загружаем все элементы, затем избранные
