@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, nextTick } from 'vue'
 import { initializeApp } from 'firebase/app'
 import {
   getAuth,
@@ -10,11 +10,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth'
-
-// Если вам нужны другие функции из Realtime Database, импортируйте их так
 import { getDatabase, ref as dbRef, set, push, get, update } from 'firebase/database'
 
-// Создайте экземпляры для Auth и Database
 const firebaseConfig = {
   apiKey: 'AIzaSyCE2imVR50t0z4dVKgPKAoLvjtz6I8KRog',
   authDomain: 'sneakers-5c581.firebaseapp.com',
@@ -24,6 +21,7 @@ const firebaseConfig = {
   messagingSenderId: '278974655722',
   appId: '1:278974655722:web:e033d27d8c2a69f2c87b93'
 }
+
 const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider()
   try {
@@ -42,7 +40,39 @@ onMounted(() => {
     isLoggedIn.value = user
   })
 })
-// Инициализация Firebase
+const script = document.createElement('script')
+onMounted(() => {
+  nextTick().then(() => {
+    setTimeout(() => {
+      const script = document.createElement('script')
+      script.src = 'https://telegram.org/js/telegram-widget.js?22'
+      script.setAttribute('data-telegram-login', 'WorldSpawnBot') // Замените на имя вашего бота
+      script.setAttribute('data-size', 'medium')
+      script.setAttribute('data-onauth', 'onTelegramAuth')
+      script.setAttribute('data-request-access', 'write')
+      script.async = true
+
+      const container = document.getElementById('telegram-button-container')
+      if (container) {
+        container.appendChild(script)
+      } else {
+        console.error('Container not found')
+      }
+    }, 500) // Задержка в 500 миллисекунд
+  })
+})
+function onTelegramAuth(user) {
+  alert(
+    'Logged in as ' +
+      user.first_name +
+      ' ' +
+      user.last_name +
+      ' (' +
+      user.id +
+      (user.username ? ', @' + user.username : '') +
+      ')'
+  )
+}
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
 const database = getDatabase()
@@ -326,6 +356,8 @@ const props = defineProps({
         <img src="/icons8-google.svg" alt="Google Sign-In" class="w-6 h-6 mr-2" />
         Войти через Google
       </button>
+      <div id="telegram-button-container"></div>
+
       <div v-if="notificationMessage" class="notification">
         {{ notificationMessage }}
       </div>
