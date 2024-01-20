@@ -227,7 +227,7 @@ const toggleFavorite = async () => {
       <h2 class="text-lg sm:text-xl font-semibold mb-2">Sizes (US):</h2>
       <div class="flex flex-wrap gap-2 mb-4">
         <button
-          v-for="size in productDetails.sizes && productDetails.sizes.US"
+          v-for="size in productDetails.sizes && productDetails.sizes"
           :key="size"
           @click="selectSize(size)"
           :disabled="unavailableSizes.includes(size)"

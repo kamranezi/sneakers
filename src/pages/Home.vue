@@ -95,14 +95,31 @@ const rawItems = ref([])
 const filters = reactive({
   sortBy: 'title',
   searchQuery: '',
-  category: null
+  category: null,
+  gender: null,
+  size: null
 })
+const resetFilters = () => {
+  filters.searchQuery = ''
+  filters.category = null
+  filters.sortBy = 'title' // Или любое другое начальное значение по умолчанию
+  selectedGenders.value = ['Men', 'Women', 'Kids']
+  selectedSize.value = 'Все размеры'
+
+  // Очистка сохраненных значений в localStorage
+  localStorage.removeItem('filters')
+  localStorage.removeItem('selectedGenders')
+  localStorage.removeItem('selectedSize')
+  localStorage.removeItem('sortBy')
+
+  // Перезагрузите или обновите список элементов, если это необходимо
+  fetchItems()
+}
 
 const selectedBrands = ref(['Adidas'])
 
 const selectedGenders = ref(['Men', 'Women', 'Kids']) // Установите начальные значения здесь
 // const selectedSizes = ref([]);
-const selectedSize = ref('')
 const toggleBrandSelection = (brand) => {
   const index = selectedBrands.value.indexOf(brand)
   if (index > -1) {
@@ -111,12 +128,58 @@ const toggleBrandSelection = (brand) => {
     selectedBrands.value.push(brand) // Add brand if it's not selected
   }
 }
+const sizes = ref([
+  'Все размеры',
+  3,
+  3.5,
+  4,
+  4.5,
+  5,
+  5.5,
+  6,
+  6.5,
+  7,
+  7.5,
+  8,
+  8.5,
+  9,
+  9.5,
+  10,
+  10.5,
+  11,
+  11.5,
+  12,
+  13,
+  14,
+  14.5,
+  15
+])
+const selectedSize = ref('Все размеры')
 
 const items = computed(() => {
   return rawItems.value
+    .filter((item) => (filters.category ? item.category === filters.category : true))
     .filter((item) => {
-      // Фильтрация по категории, если выбрана
-      return filters.category ? item.category === filters.category : true
+      if (selectedGenders.value.length === 0) {
+        return true
+      }
+      const filterMen = selectedGenders.value.includes('Men') && item.male
+      const filterWomen = selectedGenders.value.includes('Women') && item.female
+      const filterKids = selectedGenders.value.includes('Kids') && item.kids
+      return filterMen || filterWomen || filterKids
+    })
+    .filter((item) => {
+      if (selectedSize.value === 'Все размеры') {
+        return true
+      }
+      const selectedSizeNum = Number(selectedSize.value)
+      const hasSizes = Array.isArray(item.sizes)
+      const hasUnavailableSizes = Array.isArray(item.unavailable_sizes)
+      return (
+        hasSizes &&
+        item.sizes.includes(selectedSizeNum) &&
+        (!hasUnavailableSizes || !item.unavailable_sizes.includes(selectedSizeNum))
+      )
     })
     .filter((item) => item.title.toLowerCase().includes(filters.searchQuery.toLowerCase()))
     .sort((a, b) => {
@@ -148,13 +211,7 @@ const selectCategory = (category) => {
   console.log(`Category selected: ${category}`)
   // You might want to update the displayed items based on the selected category
 }
-const onClickAddPlus = (item) => {
-  if (!item.isAdded) {
-    addToCart(item)
-  } else {
-    removeFromCart(item)
-  }
-}
+
 const fetchItems = async () => {
   const itemsRef = dbRef(database, 'items')
   const snapshot = await get(itemsRef)
@@ -185,23 +242,65 @@ const fetchUserFavorites = async () => {
     userFavorites.value = []
   }
 }
+watch(
+  filters,
+  (newFilters) => {
+    localStorage.setItem('filters', JSON.stringify(newFilters))
+  },
+  { deep: true }
+)
+watch(selectedGenders, (newGenders) => {
+  localStorage.setItem('selectedGenders', JSON.stringify(newGenders))
+})
 
+watch(
+  () => filters.sortBy,
+  (newSortBy) => {
+    localStorage.setItem('sortBy', newSortBy)
+  }
+)
+watch(selectedSize, (newSize) => {
+  localStorage.setItem('selectedSize', newSize)
+})
+watch(userFavorites, async () => {
+  await fetchItems() // Перезагрузка элементов при изменении избранных
+})
 onMounted(() => {
+  // Восстановление состояния корзины
   cart.value = JSON.parse(localStorage.getItem('cart')) || []
-  fetchItems().then(fetchUserFavorites) // Первоначально загружаем все элементы, затем избранные
+  // Восстановление состояния фильтров
+  const savedFilters = localStorage.getItem('filters')
+  if (savedFilters) {
+    Object.assign(filters, JSON.parse(savedFilters))
+  }
+  // Восстановление выбранного размера
+  const savedSize = localStorage.getItem('selectedSize')
+  if (savedSize) {
+    selectedSize.value = savedSize
+  }
+  const savedGenders = localStorage.getItem('selectedGenders')
+  if (savedGenders) {
+    selectedGenders.value = JSON.parse(savedGenders)
+  }
+
+  const savedSortBy = localStorage.getItem('sortBy')
+  if (savedSortBy) {
+    filters.sortBy = savedSortBy
+  }
+
+  // Загрузка товаров и избранных
+  fetchItems().then(fetchUserFavorites)
   updateIsAddedState()
   fetchCategories()
 })
+
 onMounted(async () => {
   if (auth.currentUser) {
     await fetchUserFavorites()
   }
-  // Загрузите корзину и другие необходимые данные
+  // Другие действия при монтировании
 })
 
-watch(userFavorites, async () => {
-  await fetchItems() // Перезагрузка элементов при изменении избранных
-})
 const onChangeSelect = (event) => {
   filters.sortBy = event.target.value
   // fetchItems() вызывать, если вам нужно изменить запрос к базе данных на основе сортировки
@@ -215,35 +314,37 @@ const onChangeSearchInput = (event) => {
 
 <template>
   <div class="container">
-    <div class="brand-filter">
-      <!-- Adidas -->
-      <div class="brand-option" @click="toggleBrandSelection('Adidas')">
-        <input type="checkbox" id="brand-adidas" :checked="selectedBrands.includes('Adidas')" />
-        <label for="brand-adidas">Adidas</label>
-      </div>
+    <!--    <div class="brand-filter">-->
+    <!--      &lt;!&ndash; Adidas &ndash;&gt;-->
+    <!--      <div class="brand-option" @click="toggleBrandSelection('Adidas')">-->
+    <!--        <input type="checkbox" id="brand-adidas" :checked="selectedBrands.includes('Adidas')" />-->
+    <!--        <label for="brand-adidas">Adidas</label>-->
+    <!--      </div>-->
 
-      <!-- Nike -->
-      <div class="brand-option" @click="toggleBrandSelection('Nike')">
-        <input type="checkbox" id="brand-nike" :checked="selectedBrands.includes('Nike')" />
-        <label for="brand-nike">Nike</label>
-      </div>
+    <!--      &lt;!&ndash; Nike &ndash;&gt;-->
+    <!--      <div class="brand-option" @click="toggleBrandSelection('Nike')">-->
+    <!--        <input type="checkbox" id="brand-nike" :checked="selectedBrands.includes('Nike')" />-->
+    <!--        <label for="brand-nike">Nike</label>-->
+    <!--      </div>-->
 
-      <!-- Reebok -->
-      <div class="brand-option" @click="toggleBrandSelection('Reebok')">
-        <input type="checkbox" id="brand-reebok" :checked="selectedBrands.includes('Reebok')" />
-        <label for="brand-reebok">Reebok</label>
-      </div>
+    <!--      &lt;!&ndash; Reebok &ndash;&gt;-->
+    <!--      <div class="brand-option" @click="toggleBrandSelection('Reebok')">-->
+    <!--        <input type="checkbox" id="brand-reebok" :checked="selectedBrands.includes('Reebok')" />-->
+    <!--        <label for="brand-reebok">Reebok</label>-->
+    <!--      </div>-->
 
-      <!-- New Balance -->
-      <div class="brand-option" @click="toggleBrandSelection('New Balance')">
-        <input
-          type="checkbox"
-          id="brand-new-balance"
-          :checked="selectedBrands.includes('New Balance')"
-        />
-        <label for="brand-new-balance">New Balance</label>
-      </div>
-    </div>
+    <!--      &lt;!&ndash; New Balance &ndash;&gt;-->
+    <!--      <div class="brand-option" @click="toggleBrandSelection('New Balance')">-->
+    <!--        <input-->
+    <!--          type="checkbox"-->
+    <!--          id="brand-new-balance"-->
+    <!--          :checked="selectedBrands.includes('New Balance')"-->
+    <!--        />-->
+    <!--        <label for="brand-new-balance">New Balance</label>-->
+    <!--      </div>-->
+    <!--    </div>-->
+    <button @click="resetFilters" class="reset-filters-btn z-20">Сбросить фильтры</button>
+
     <div class="category-scroll-container">
       <div class="category-list">
         <a
@@ -279,26 +380,9 @@ const onChangeSearchInput = (event) => {
         </div>
         <div class="size-selector">
           <select v-model="selectedSize">
-            <option value="">All Sizes</option>
-            <option value="5">5</option>
-            <option value="5.5">5.5</option>
-            <option value="6">6</option>
-            <option value="6.5">6.5</option>
-            <option value="7">7</option>
-            <option value="7.5">7.5</option>
-            <option value="8">8</option>
-            <option value="8.5">8.5</option>
-            <option value="9">9</option>
-            <option value="9.5">9.5</option>
-            <option value="10">10</option>
-            <option value="10.5">10.5</option>
-            <option value="11">11</option>
-            <option value="11.5">11.5</option>
-            <option value="12">12</option>
-            <option value="13">13</option>
-            <option value="14">14</option>
-            <option value="14.5">14.5</option>
-            <option value="15">15</option>
+            <option v-for="size in sizes" :key="size" :value="size">
+              {{ size }}
+            </option>
           </select>
         </div>
       </div>
@@ -313,20 +397,17 @@ const onChangeSearchInput = (event) => {
           />
         </div>
         <select
+          v-model="filters.sortBy"
           @change="onChangeSelect"
           class="border rounded-lg py-1 px-2 h-8 outline-none focus:border-gray-400 text-xs md:text-sm w-full max-w-[200px]"
         >
-          <option value="name">По популярности</option>
+          <option value="title">По популярности</option>
           <option value="price">Сначала дешевые</option>
           <option value="-price">Сначала дорогие</option>
         </select>
       </div>
     </div>
-    <CardList
-      :items="paginatedItems"
-      @add-to-favorite="onFavoriteClick"
-      @add-to-cart="onClickAddPlus"
-    />
+    <CardList :items="paginatedItems" @add-to-favorite="onFavoriteClick" />
     <div class="flex justify-center items-center space-x-2 my-4 mb-8">
       <button v-if="currentPage > 1" @click="goToPage(currentPage - 1)" class="p-2">
         <img src="/pag.png" alt="Prev" class="h-8 w-8 rotate-180" />
@@ -478,4 +559,30 @@ const onChangeSearchInput = (event) => {
 }
 
 /* Стили для других элементов */
+</style>
+<style scoped>
+.reset-filters-btn {
+  background-color: #4caf50; /* Зеленый фон */
+  color: white; /* Белый текст */
+  padding: 10px 20px; /* Отступы внутри кнопки */
+  border: none; /* Без границ */
+  border-radius: 4px; /* Скругленные углы */
+  cursor: pointer; /* Курсор в виде указателя */
+  transition: background-color 0.3s; /* Плавный переход для фона */
+}
+
+.reset-filters-btn:hover {
+  background-color: #45a049; /* Темно-зеленый фон при наведении */
+}
+@media (max-width: 600px) {
+  /* или любой другой брейкпоинт, который вы считаете подходящим */
+  .reset-filters-btn {
+    position: fixed; /* Фиксированное положение */
+    top: 55px; /* Отступ сверху */
+    left: 30%; /* Отступ справа */
+    padding: 4px 10px; /* Меньшие отступы */
+    font-size: 12px; /* Меньший размер шрифта */ /* Убедитесь, что кнопка будет над другими элементами */
+  }
+}
+/* Добавьте медиа-запросы, если нужно адаптировать кнопку под мобильные устройства */
 </style>
