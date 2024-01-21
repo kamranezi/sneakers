@@ -66,29 +66,32 @@ onMounted(() => {
   })
 })
 // Функция, которая будет вызываться при успешной аутентификации через Telegram
-function onTelegramAuth(user) {
-  console.log('Telegram auth callback с данными пользователя:', user)
+function onTelegramAuth(userData) {
+  console.log('Telegram auth callback с данными пользователя:', userData)
 
   // Отправка данных пользователя на сервер
-  sendUserDataToServer(user)
+  sendUserDataToServer({ user: userData }) // Обратите внимание, что мы передаем объект с ключом 'user'
     .then((response) => {
       console.log('Ответ сервера:', response)
+      if (response.customToken) {
+        // Аутентификация в Firebase с использованием кастомного токена
+        authenticateUserWithCustomToken(response.customToken)
+      }
       // Здесь можно добавить дополнительную логику обработки ответа сервера
     })
     .catch((error) => {
       console.error('Ошибка при отправке данных пользователя:', error)
     })
 }
-
 // Функция для отправки данных пользователя на сервер
-async function sendUserDataToServer(userData) {
+async function sendUserDataToServer(data) {
   try {
     const response = await fetch('http://localhost:3003/receive-telegram-data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(userData)
+      body: JSON.stringify(data)
     })
     return await response.json()
   } catch (error) {
@@ -96,6 +99,16 @@ async function sendUserDataToServer(userData) {
   }
 }
 
+function authenticateUserWithCustomToken(customToken) {
+  signInWithCustomToken(auth, customToken)
+    .then((userCredential) => {
+      console.log('Пользователь успешно аутентифицирован:', userCredential.user)
+      // Дополнительная логика после успешной аутентификации
+    })
+    .catch((error) => {
+      console.error('Ошибка аутентификации с кастомным токеном:', error)
+    })
+}
 // Установка функции обратного вызова в глобальное окно
 onMounted(() => {
   window.onTelegramAuth = onTelegramAuth
@@ -120,19 +133,6 @@ onMounted(() => {
     }, 500)
   })
 })
-
-// Функция для отправки тестового сообщения на сервер
-// Функция для отправки данных пользователя на сервер
-// function authenticateUserWithCustomToken(customToken) {
-//   signInWithCustomToken(auth, customToken)
-//     .then((userCredential) => {
-//       console.log('Пользователь успешно аутентифицирован:', userCredential.user)
-//       // Дополнительная логика после успешной аутентификации
-//     })
-//     .catch((error) => {
-//       console.error('Ошибка аутентификации с кастомным токеном:', error)
-//     })
-// }
 
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
