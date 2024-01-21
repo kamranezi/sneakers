@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, nextTick } from 'vue'
+import { onMounted, ref, provide, nextTick } from 'vue'
 import { initializeApp } from 'firebase/app'
 import {
   getAuth,
@@ -35,36 +35,39 @@ const signInWithGoogle = async () => {
     console.error('Ошибка входа через Google:', error)
   }
 }
-const isLoggedIn = ref(true)
+
+const isLoggedIn = ref(false)
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     isLoggedIn.value = user
   })
 })
 const script = document.createElement('script')
-// Пример создания записи пользователя в Realtime Database
 onMounted(() => {
   window.onTelegramAuth = onTelegramAuth
 
-  nextTick().then(() => {
-    setTimeout(() => {
-      const script = document.createElement('script')
-      script.src = 'https://telegram.org/js/telegram-widget.js?22'
-      script.setAttribute('data-telegram-login', 'WorldSpawnBot') // Имя вашего бота
-      script.setAttribute('data-size', 'medium')
-      script.setAttribute('data-onauth', 'onTelegramAuth')
-      script.setAttribute('data-request-access', 'write')
-      script.async = true
-
-      const container = document.getElementById('telegram-button-container')
-      if (container) {
-        container.appendChild(script)
-      } else {
-        console.error('Container not found')
-      }
-    }, 500)
-  })
+  loadTelegramWidget() // Вызов функции загрузки виджета
 })
+function loadTelegramWidget() {
+  const container = document.getElementById('telegram-button-container')
+  if (container) {
+    container.innerHTML = '' // Очистка контейнера
+
+    const script = document.createElement('script')
+    script.src = 'https://telegram.org/js/telegram-widget.js?22'
+    script.setAttribute('data-telegram-login', 'WorldSpawnBot')
+    script.setAttribute('data-size', 'medium')
+    script.setAttribute('data-onauth', 'onTelegramAuth(user)')
+    script.setAttribute('data-request-access', 'write')
+    script.async = true
+
+    container.appendChild(script)
+  } else {
+    console.error('Container not found')
+  }
+}
+
+// Пример создания записи пользователя в Realtime Database
 // Функция, которая будет вызываться при успешной аутентификации через Telegram
 function onTelegramAuth(userData) {
   console.log('Telegram auth callback с данными пользователя:', userData)
@@ -110,29 +113,6 @@ function authenticateUserWithCustomToken(customToken) {
     })
 }
 // Установка функции обратного вызова в глобальное окно
-onMounted(() => {
-  window.onTelegramAuth = onTelegramAuth
-
-  // Загрузка скрипта Telegram Widget
-  nextTick().then(() => {
-    setTimeout(() => {
-      const script = document.createElement('script')
-      script.src = 'https://telegram.org/js/telegram-widget.js?22'
-      script.setAttribute('data-telegram-login', 'WorldSpawnBot') // Имя вашего бота
-      script.setAttribute('data-size', 'medium')
-      script.setAttribute('data-onauth', 'onTelegramAuth(user)')
-      script.setAttribute('data-request-access', 'write')
-      script.async = true
-
-      const container = document.getElementById('telegram-button-container')
-      if (container) {
-        container.appendChild(script)
-      } else {
-        console.error('Container not found')
-      }
-    }, 500)
-  })
-})
 
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
@@ -262,6 +242,8 @@ const logoutUser = async () => {
   try {
     await signOut(auth)
     console.log('Logged out')
+    loadTelegramWidget() // Перезагрузка виджета
+
     notificationMessage.value = 'Вы вышли из системы, для покупок авторизуйтесь'
     setTimeout(() => (notificationMessage.value = ''), 4000)
 
@@ -415,7 +397,7 @@ const props = defineProps({
         <img src="/icons8-google.svg" alt="Google Sign-In" class="w-6 h-6 mr-2" />
         Войти через Google
       </button>
-      <div id="telegram-button-container"></div>
+      <div v-if="!isLoggedIn" id="telegram-button-container"></div>
 
       <div v-if="notificationMessage" class="notification">
         {{ notificationMessage }}
