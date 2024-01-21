@@ -8,6 +8,7 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
+  signInWithCustomToken,
   signInWithPopup
 } from 'firebase/auth'
 import { getDatabase, ref as dbRef, set, push, get, update } from 'firebase/database'
@@ -41,12 +42,15 @@ onMounted(() => {
   })
 })
 const script = document.createElement('script')
+// Пример создания записи пользователя в Realtime Database
 onMounted(() => {
+  window.onTelegramAuth = onTelegramAuth
+
   nextTick().then(() => {
     setTimeout(() => {
       const script = document.createElement('script')
       script.src = 'https://telegram.org/js/telegram-widget.js?22'
-      script.setAttribute('data-telegram-login', 'WorldSpawnBot') // Замените на имя вашего бота
+      script.setAttribute('data-telegram-login', 'WorldSpawnBot') // Имя вашего бота
       script.setAttribute('data-size', 'medium')
       script.setAttribute('data-onauth', 'onTelegramAuth')
       script.setAttribute('data-request-access', 'write')
@@ -58,29 +62,84 @@ onMounted(() => {
       } else {
         console.error('Container not found')
       }
-    }, 500) // Задержка в 500 миллисекунд
+    }, 500)
   })
 })
+// Функция, которая будет вызываться при успешной аутентификации через Telegram
 function onTelegramAuth(user) {
-  alert(
-    'Logged in as ' +
-      user.first_name +
-      ' ' +
-      user.last_name +
-      ' (' +
-      user.id +
-      (user.username ? ', @' + user.username : '') +
-      ')'
-  )
+  console.log('Telegram auth callback с данными пользователя:', user)
+
+  // Отправка данных пользователя на сервер
+  sendUserDataToServer(user)
+    .then((response) => {
+      console.log('Ответ сервера:', response)
+      // Здесь можно добавить дополнительную логику обработки ответа сервера
+    })
+    .catch((error) => {
+      console.error('Ошибка при отправке данных пользователя:', error)
+    })
 }
+
+// Функция для отправки данных пользователя на сервер
+async function sendUserDataToServer(userData) {
+  try {
+    const response = await fetch('http://localhost:3003/receive-telegram-data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userData)
+    })
+    return await response.json()
+  } catch (error) {
+    throw error
+  }
+}
+
+// Установка функции обратного вызова в глобальное окно
+onMounted(() => {
+  window.onTelegramAuth = onTelegramAuth
+
+  // Загрузка скрипта Telegram Widget
+  nextTick().then(() => {
+    setTimeout(() => {
+      const script = document.createElement('script')
+      script.src = 'https://telegram.org/js/telegram-widget.js?22'
+      script.setAttribute('data-telegram-login', 'WorldSpawnBot') // Имя вашего бота
+      script.setAttribute('data-size', 'medium')
+      script.setAttribute('data-onauth', 'onTelegramAuth(user)')
+      script.setAttribute('data-request-access', 'write')
+      script.async = true
+
+      const container = document.getElementById('telegram-button-container')
+      if (container) {
+        container.appendChild(script)
+      } else {
+        console.error('Container not found')
+      }
+    }, 500)
+  })
+})
+
+// Функция для отправки тестового сообщения на сервер
+// Функция для отправки данных пользователя на сервер
+// function authenticateUserWithCustomToken(customToken) {
+//   signInWithCustomToken(auth, customToken)
+//     .then((userCredential) => {
+//       console.log('Пользователь успешно аутентифицирован:', userCredential.user)
+//       // Дополнительная логика после успешной аутентификации
+//     })
+//     .catch((error) => {
+//       console.error('Ошибка аутентификации с кастомным токеном:', error)
+//     })
+// }
+
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
 const database = getDatabase()
-
 const email = ref('')
 const password = ref('')
 const notificationMessage = ref('') // Для хранения сообщения уведомления
-
 const customerName = ref('')
 const customerEmail = ref('')
 const customerGender = ref('Gender')
