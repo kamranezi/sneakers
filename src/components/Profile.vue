@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, provide, nextTick } from 'vue'
+import { onMounted, ref, watch, provide, nextTick } from 'vue'
 import { initializeApp } from 'firebase/app'
 import {
   getAuth,
@@ -35,6 +35,9 @@ const signInWithGoogle = async () => {
     console.error('Ошибка входа через Google:', error)
   }
 }
+const customerPhotoUrl = ref('/tg.png') // Инициализация пустой строки для URL фотографии
+
+// Вызовите этот метод каждый раз, когда customerPhotoUrl обновляется
 
 const isLoggedIn = ref(false)
 onMounted(() => {
@@ -67,52 +70,123 @@ function loadTelegramWidget() {
   }
 }
 
-// Пример создания записи пользователя в Realtime Database
+const authenticateUserOnClick = async () => {
+  // Получите user_id и username из параметров URL
+  const urlParams = new URLSearchParams(window.location.search)
+  const userId = urlParams.get('user_id')
+  const username = urlParams.get('username')
+
+  console.log('UserID из URL:', userId, 'Username из URL:', username)
+
+  // Проверяем, получены ли userId и username
+  if (userId && username) {
+    const requestBody = {
+      user: {
+        id: userId,
+        username: username
+      }
+    }
+    console.log('Отправляемый JSON:', requestBody)
+
+    try {
+      // Отправляем данные на сервер и получаем кастомный токен
+      const response = await fetch(
+        'https://us-central1-servertg-709f6.cloudfunctions.net/app/receive-telegram-data',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        }
+      )
+      const data = await response.json()
+      if (data.customToken) {
+        // Аутентификация пользователя с полученным кастомным токеном
+        const userCredential = await signInWithCustomToken(auth, data.customToken)
+        console.log('Пользователь успешно аутентифицирован')
+        const firebaseUid = userCredential.user.uid
+        const name = username.split('@')[0] // Извлекаем имя из username
+
+        // Записываем name в Firebase, используя UID
+        const userRef = dbRef(database, `users/${firebaseUid}`)
+        await update(userRef, { name: name })
+
+        console.log('Имя пользователя записано в Firebase')
+        // Вы можете перенаправить пользователя на домашнюю страницу или выполнить другие действия после аутентификации
+      }
+    } catch (error) {
+      console.error('Ошибка при запросе данных пользователя или аутентификации:', error)
+      // Обработайте ошибки, связанные с запросом к серверу
+    }
+  } else {
+    console.log('User ID или Username не найдены в параметрах URL')
+    // Обработайте случай, когда userId или username не были переданы в параметрах URL
+  }
+}
 // Функция, которая будет вызываться при успешной аутентификации через Telegram
 function onTelegramAuth(userData) {
   console.log('Telegram auth callback с данными пользователя:', userData)
 
-  // Отправка данных пользователя на сервер
-  sendUserDataToServer({ user: userData }) // Обратите внимание, что мы передаем объект с ключом 'user'
+  // Предполагается, что username уже содержится в userData
+  const username = userData.username
+  const photoUrl = userData.photo_url // Предполагается, что фото доступно как 'photo_url'
+  // Извлечение username из данных Telegram
+
+  sendUserDataToServer({ user: userData }) // Отправляем данные пользователя на сервер
     .then((response) => {
       console.log('Ответ сервера:', response)
       if (response.customToken) {
         // Аутентификация в Firebase с использованием кастомного токена
-        authenticateUserWithCustomToken(response.customToken)
+        authenticateUserWithCustomToken(response.customToken, username, photoUrl) // Передаем username и photoUrl
       }
       // Здесь можно добавить дополнительную логику обработки ответа сервера
     })
     .catch((error) => {
-      console.error('Ошибка при отправке данных пользователя:', error)
+      console.error('Ошибка при отправке данных пользователя на сервер:', error)
     })
-}
-// Функция для отправки данных пользователя на сервер
+} // Функция для отправки данных пользователя на сервер
 async function sendUserDataToServer(data) {
   try {
-    const response = await fetch('http://localhost:3003/receive-telegram-data', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
+    const response = await fetch(
+      'https://us-central1-servertg-709f6.cloudfunctions.net/app/receive-telegram-data',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      }
+    )
     return await response.json()
   } catch (error) {
     throw error
   }
 }
 
-function authenticateUserWithCustomToken(customToken) {
+function authenticateUserWithCustomToken(customToken, username, photoUrl) {
   signInWithCustomToken(auth, customToken)
     .then((userCredential) => {
       console.log('Пользователь успешно аутентифицирован:', userCredential.user)
-      // Дополнительная логика после успешной аутентификации
+      // Дополнительная логика после успешной аутентификации, например, сохранение username
+      return update(dbRef(database, `users/${userCredential.user.uid}`), {
+        name: username,
+        photo: photoUrl,
+        gender: customerGender.value,
+        age: customerAge.value,
+        size: parseInt(customerShoeSize.value), // Преобразование в число
+        brand: customerFavoriteBrand.value,
+        format: selectedSizeFormat.value
+        // photo: photoUrl // Сохраняем URL фотографии
+      })
+    })
+    .then(() => {
+      console.log('Username успешно сохранен в Firebase')
     })
     .catch((error) => {
-      console.error('Ошибка аутентификации с кастомным токеном:', error)
+      console.error('Ошибка аутентификации с кастомным токеном или при сохранении username:', error)
     })
-}
-// Установка функции обратного вызова в глобальное окно
+} // Установка функции обратного вызова в глобальное окно
 
 const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
@@ -125,25 +199,20 @@ const customerEmail = ref('')
 const customerGender = ref('Gender')
 const customerAge = ref('')
 const customerShoeSize = ref('')
-const customerFavoriteBrand = ref('Adidas')
-const customerShoeFormat = ref('US')
+const customerFavoriteBrand = ref('')
+const customerShoeFormat = ref('')
 const favorites = ref([])
 const sizes = {
   EU: [
-    36, 36.5, 37, 37.5, 38, 38.5, 39, 39.5, 40, 40.5, 41, 41.5, 42, 42.5, 43, 43.5, 44, 44.5, 45,
-    45.5, 46, 46.5, 47, 47.5, 48
+    35, 35.5, 36, 36.5, 37, 37.5, 38, 38.5, 39, 39.5, 40, 40.5, 41, 41.5, 42, 42.5, 43, 43.5, 44,
+    44.5, 45, 45.5, 46, 46.5, 47, 47.5, 48
   ],
-  US: [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13],
-  UK: [5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12]
+  US: [4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13]
 }
 
-const selectedSizeFormat = ref('EU') // начальное значение
+const selectedSizeFormat = ref('') // начальное значение
 const availableSizes = ref(sizes[selectedSizeFormat.value])
 
-const changeSizeFormat = (format) => {
-  selectedSizeFormat.value = format
-  availableSizes.value = sizes[format]
-}
 const loginUser = async () => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value)
@@ -190,16 +259,19 @@ const updateProfile = async () => {
     return
   }
 
-  const userData = {
+  const updateData = {
     name: customerName.value,
     email: auth.currentUser.email, // Используйте email из учетных данных пользователя
     gender: customerGender.value,
     age: customerAge.value,
-    size: parseInt(customerShoeSize.value) // Преобразование в число
+    size: parseInt(customerShoeSize.value), // Преобразование в число
+    brand: customerFavoriteBrand.value,
+    format: selectedSizeFormat.value,
+    photo: customerPhotoUrl.value
   }
 
   try {
-    await set(dbRef(database, `users/${auth.currentUser.uid}`), userData)
+    await update(dbRef(database, `users/${auth.currentUser.uid}`), updateData)
     console.log('Профиль обновлен')
   } catch (error) {
     console.error('Ошибка при обновлении профиля:', error)
@@ -216,6 +288,12 @@ onMounted(async () => {
       const userSnapshot = await get(userRef)
       if (userSnapshot.exists()) {
         const userData = userSnapshot.val()
+        customerPhotoUrl.value = userData.photo || '/tg.png'
+        selectedSizeFormat.value = userData.format || 'EU' // Установите значение по умолчанию, если оно отсутствует
+        customerShoeSize.value = userData.size ? String(userData.size) : '36'
+        // Пример значения по умолчанию
+        console.log('Размер обуви:', customerShoeSize.value) // Обновление URL фотографии
+
         console.log('Полученные данные пользователя:', userData) // Добавьте эту строку для отладки
 
         // Обновление данных профиля
@@ -223,9 +301,7 @@ onMounted(async () => {
         customerEmail.value = userData.email || ''
         customerGender.value = userData.gender || ''
         customerAge.value = userData.age || ''
-        customerShoeFormat.value = userData.format || ''
         customerFavoriteBrand.value = userData.brand || ''
-        customerShoeSize.value = userData.size ? String(userData.size) : ''
 
         // Получение и вывод избранных ID товаров пользователя
         if (userData.favorites && userData.favorites.length > 0) {
@@ -253,7 +329,49 @@ const logoutUser = async () => {
     notificationMessage.value = 'Ошибка выхода: ' + error.message // Уведомление об ошибке
   }
 }
+const changeSizeFormat = () => {
+  availableSizes.value = sizes[selectedSizeFormat.value]
+}
+watch(selectedSizeFormat, () => {
+  changeSizeFormat()
+})
+const customerShoeSizeCm = ref('')
+function convertSizeToCm(size, format) {
+  if (size === undefined || format === undefined) {
+    return null
+  }
 
+  // Задаем известные соответствия размеров и сантиметров
+  const sizeConversion = {
+    EU: {
+      baseSize: 47.5, // Базовый размер для EU
+      baseCm: 31 // Базовый размер в см для EU
+    },
+    US: {
+      baseSize: 13, // Базовый размер для US мужской обуви
+      baseCm: 31 // Базовый размер в см для US мужской обуви
+    }
+  }
+
+  // Определяем шаг изменения размера для EU и US
+  const euSizeStep = 2 / 3 // EU размер увеличивается на 2/3 см за каждый пункт
+  const usSizeStep = 1 // US размер увеличивается на 1 см за каждый пункт
+
+  let sizeInCm
+
+  if (format === 'EU') {
+    sizeInCm = sizeConversion.EU.baseCm + (size - sizeConversion.EU.baseSize) * euSizeStep
+  } else if (format === 'US') {
+    sizeInCm = sizeConversion.US.baseCm + (size - sizeConversion.US.baseSize) * usSizeStep
+  } else {
+    return null
+  }
+
+  return sizeInCm.toFixed(1) // Округление до одного десятичного знака
+}
+watch([() => customerShoeSize.value, () => selectedSizeFormat.value], () => {
+  customerShoeSizeCm.value = convertSizeToCm(customerShoeSize.value, selectedSizeFormat.value)
+})
 const props = defineProps({
   closeProfile: Function
 })
@@ -263,7 +381,8 @@ const props = defineProps({
 
   <div class="fixed top-0 right-0 h-full w-96 bg-white z-40 p-8 overflow-y-auto">
     <div class="flex items-center gap-5 mb-4">
-      <!--      <button @click="loginWithTelegram">Войти через Telegram</button>-->
+      <!-- Кнопка входа через Telegram (если она у вас есть) -->
+      <!-- <button @click="loginWithTelegram">Войти через Telegram</button> -->
 
       <img
         @click="closeProfile"
@@ -272,6 +391,15 @@ const props = defineProps({
         class="w-8 h-8 cursor-pointer opacity-40 hover:opacity-100 mr-2"
       />
       <h2 class="text-2xl font-bold">Профиль</h2>
+
+      <!-- Отображение фотографии пользователя, если она существует -->
+      <img
+        v-if="customerPhotoUrl"
+        :src="customerPhotoUrl"
+        alt="Profile Photo"
+        class="w-10 h-10 rounded-full ml-2 hover:opacity-80 cursor-pointer"
+        @click="authenticateUserOnClick"
+      />
     </div>
 
     <div class="profile-form">
@@ -320,12 +448,11 @@ const props = defineProps({
         <select
           id="customerShoeFormat"
           v-model="selectedSizeFormat"
-          @change="changeSizeFormat(selectedSizeFormat)"
+          @change="changeSizeFormat"
           class="form-select w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
         >
           <option value="EU">EU</option>
           <option value="US">US</option>
-          <option value="UK">UK</option>
         </select>
       </div>
 
@@ -334,10 +461,12 @@ const props = defineProps({
       <select
         id="shoeSize"
         v-model="customerShoeSize"
-        class="form-input w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
+        class="form-select w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
       >
         <option v-for="size in availableSizes" :key="size" :value="size">{{ size }}</option>
       </select>
+      <span v-if="customerShoeSizeCm" class="shoe-size-cm">= {{ customerShoeSizeCm }} см</span>
+      <span v-else class="shoe-size-cm">Размер не указан</span>
     </div>
 
     <button
@@ -412,5 +541,8 @@ const props = defineProps({
 
 .google-sign-in-button:hover {
   background: #f5f5f5;
+}
+.shoe-size-cm {
+  margin-left: 10px; /* или используйте padding-left в зависимости от желаемого эффекта */
 }
 </style>
