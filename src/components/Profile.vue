@@ -89,8 +89,9 @@ const authenticateUserOnClick = async () => {
   const urlParams = new URLSearchParams(window.location.search)
   const userId = urlParams.get('user_id')
   const username = urlParams.get('username')
+  const photoUrl = urlParams.get('photo_url') // Получение URL фото
 
-  console.log('UserID из URL:', userId, 'Username из URL:', username)
+  console.log('UserID из URL:', userId, 'Username из URL:', username, 'Photo URL:', photoUrl)
 
   // Проверяем, получены ли userId и username
   if (userId && username) {
@@ -125,11 +126,14 @@ const authenticateUserOnClick = async () => {
         const name = username.split('@')[0] // Извлекаем имя из username
 
         // Записываем name в Firebase, используя UID
-        const userRef = dbRef(database, `users/${firebaseUid}`)
-        await update(userRef, { name: name })
+        const updateData = { name: name }
+        if (photoUrl && photoUrl !== 'None' && photoUrl !== null) {
+          updateData.photo = photoUrl
+        }
 
-        console.log('Имя пользователя записано в Firebase')
-        // Вы можете перенаправить пользователя на домашнюю страницу или выполнить другие действия после аутентификации
+        // Записываем данные в Firebase, используя UID
+        const userRef = dbRef(database, `users/${firebaseUid}`)
+        await update(userRef, updateData) // Обновляем данные пользователя
       }
     } catch (error) {
       console.error('Ошибка при запросе данных пользователя или аутентификации:', error)
@@ -146,15 +150,13 @@ function onTelegramAuth(userData) {
 
   // Предполагается, что username уже содержится в userData
   const username = userData.username
-  const photoUrl = userData.photo_url // Предполагается, что фото доступно как 'photo_url'
-  // Извлечение username из данных Telegram
 
   sendUserDataToServer({ user: userData }) // Отправляем данные пользователя на сервер
     .then((response) => {
       console.log('Ответ сервера:', response)
       if (response.customToken) {
         // Аутентификация в Firebase с использованием кастомного токена
-        authenticateUserWithCustomToken(response.customToken, username, photoUrl) // Передаем username и photoUrl
+        authenticateUserWithCustomToken(response.customToken, username) // Передаем username и photoUrl
       }
       // Здесь можно добавить дополнительную логику обработки ответа сервера
     })
@@ -187,16 +189,20 @@ function authenticateUserWithCustomToken(customToken, username, photoUrl) {
       setTimeout(() => (notificationMessage.value = ''), 5000)
       console.log('Пользователь успешно аутентифицирован:', userCredential.user)
       // Дополнительная логика после успешной аутентификации, например, сохранение username
-      return update(dbRef(database, `users/${userCredential.user.uid}`), {
+      const updateData = {
         name: username,
-        photo: photoUrl,
         gender: customerGender.value,
         age: customerAge.value,
         size: parseInt(customerShoeSize.value), // Преобразование в число
         brand: customerFavoriteBrand.value,
         format: selectedSizeFormat.value
-        // photo: photoUrl // Сохраняем URL фотографии
-      })
+      }
+
+      if (photoUrl && photoUrl !== 'None' && photoUrl !== null) {
+        updateData.photo = photoUrl
+      }
+
+      return update(dbRef(database, `users/${userCredential.user.uid}`), updateData)
     })
     .then(() => {
       console.log('Username успешно сохранен в Firebase')
@@ -412,13 +418,23 @@ const props = defineProps({
       <h2 class="text-2xl font-bold">Профиль</h2>
 
       <!-- Отображение фотографии пользователя, если она существует -->
-      <img
-        v-if="customerPhotoUrl"
-        :src="customerPhotoUrl"
-        alt="Profile Photo"
-        class="w-10 h-10 rounded-full ml-2 hover:opacity-80 cursor-pointer"
-        @click="authenticateUserOnClick"
-      />
+      <div>
+        <img
+          v-if="customerPhotoUrl"
+          :src="customerPhotoUrl"
+          alt="Profile Photo"
+          class="w-10 h-10 rounded-full ml-2 hover:opacity-80 cursor-pointer"
+          @click="authenticateUserOnClick"
+        />
+
+        <img
+          v-else
+          src="/profile.svg"
+          alt="Default Image"
+          class="w-10 h-10 rounded-full ml-2 hover:opacity-80 cursor-pointer"
+          @click="authenticateUserOnClick"
+        />
+      </div>
     </div>
 
     <div class="profile-form">
