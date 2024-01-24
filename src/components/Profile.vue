@@ -27,9 +27,23 @@ const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider()
   try {
     const result = await signInWithPopup(auth, provider)
+    const user = result.user
+
+    notificationMessage.value = 'Вы авторизовались через Google!'
+    setTimeout(() => (notificationMessage.value = ''), 5000)
     // Пользователь успешно вошел через Google
     // Здесь вы можете добавить логику после успешного входа
     console.log(result.user)
+    const photoUrl = result.user.photoURL
+    if (photoUrl) {
+      const uid = user.uid
+
+      // Обновляем запись пользователя в Firebase Database
+      const userRef = dbRef(database, `users/${uid}`)
+      await update(userRef, { photo: photoUrl })
+      console.log('Фотография пользователя:', photoUrl)
+      // Теперь вы можете использовать photoUrl, например, отображать изображение в интерфейсе
+    }
     // После успешного входа можно закрыть модальное окно входа
   } catch (error) {
     console.error('Ошибка входа через Google:', error)
@@ -105,6 +119,8 @@ const authenticateUserOnClick = async () => {
         // Аутентификация пользователя с полученным кастомным токеном
         const userCredential = await signInWithCustomToken(auth, data.customToken)
         console.log('Пользователь успешно аутентифицирован')
+        notificationMessage.value = 'Вы авторизовались через Telegram!'
+        setTimeout(() => (notificationMessage.value = ''), 5000)
         const firebaseUid = userCredential.user.uid
         const name = username.split('@')[0] // Извлекаем имя из username
 
@@ -167,6 +183,8 @@ async function sendUserDataToServer(data) {
 function authenticateUserWithCustomToken(customToken, username, photoUrl) {
   signInWithCustomToken(auth, customToken)
     .then((userCredential) => {
+      notificationMessage.value = 'Вы успешно вошли через Telegram!'
+      setTimeout(() => (notificationMessage.value = ''), 5000)
       console.log('Пользователь успешно аутентифицирован:', userCredential.user)
       // Дополнительная логика после успешной аутентификации, например, сохранение username
       return update(dbRef(database, `users/${userCredential.user.uid}`), {
@@ -218,7 +236,7 @@ const loginUser = async () => {
     const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value)
     console.log('Logged in:', userCredential.user)
     notificationMessage.value = 'Вы успешно вошли в систему!'
-    setTimeout(() => (notificationMessage.value = ''), 3000) // Очистка уведомления через 3 секунды
+    setTimeout(() => (notificationMessage.value = ''), 6000) // Очистка уведомления через 3 секунды
 
     // Уведомление об успешном входе
   } catch (error) {
@@ -273,6 +291,8 @@ const updateProfile = async () => {
   try {
     await update(dbRef(database, `users/${auth.currentUser.uid}`), updateData)
     console.log('Профиль обновлен')
+    notificationMessage.value = 'Данные профиля обновлены!'
+    setTimeout(() => (notificationMessage.value = ''), 5000)
   } catch (error) {
     console.error('Ошибка при обновлении профиля:', error)
   }
@@ -292,7 +312,6 @@ onMounted(async () => {
         selectedSizeFormat.value = userData.format || 'EU' // Установите значение по умолчанию, если оно отсутствует
         customerShoeSize.value = userData.size ? String(userData.size) : '36'
         // Пример значения по умолчанию
-        console.log('Размер обуви:', customerShoeSize.value) // Обновление URL фотографии
 
         console.log('Полученные данные пользователя:', userData) // Добавьте эту строку для отладки
 
@@ -321,7 +340,7 @@ const logoutUser = async () => {
     loadTelegramWidget() // Перезагрузка виджета
 
     notificationMessage.value = 'Вы вышли из системы, для покупок авторизуйтесь'
-    setTimeout(() => (notificationMessage.value = ''), 4000)
+    setTimeout(() => (notificationMessage.value = ''), 5000)
 
     // Уведомление об успешном выходе
   } catch (error) {
@@ -379,7 +398,7 @@ const props = defineProps({
 <template>
   <div class="fixed inset-0 bg-black opacity-70 z-10 hidden sm:block"></div>
 
-  <div class="fixed top-0 right-0 h-full w-96 bg-white z-40 p-8 overflow-y-auto">
+  <div class="fixed top-0 right-0 h-full w-full sm:w-96 bg-white z-40 p-8 overflow-y-auto">
     <div class="flex items-center gap-5 mb-4">
       <!-- Кнопка входа через Telegram (если она у вас есть) -->
       <!-- <button @click="loginWithTelegram">Войти через Telegram</button> -->
@@ -449,7 +468,7 @@ const props = defineProps({
           id="customerShoeFormat"
           v-model="selectedSizeFormat"
           @change="changeSizeFormat"
-          class="form-select w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
+          class="form-select w-auto ml-2 rounded-lg border border-gray-300 mb-4 p-2"
         >
           <option value="EU">EU</option>
           <option value="US">US</option>
@@ -461,12 +480,16 @@ const props = defineProps({
       <select
         id="shoeSize"
         v-model="customerShoeSize"
-        class="form-select w-1/5 ml-2 rounded-lg border border-gray-300 mb-4 p-2"
+        class="form-select w-auto ml-2 rounded-lg border border-gray-300 mb-4 p-2"
       >
         <option v-for="size in availableSizes" :key="size" :value="size">{{ size }}</option>
       </select>
-      <span v-if="customerShoeSizeCm" class="shoe-size-cm">= {{ customerShoeSizeCm }} см</span>
-      <span v-else class="shoe-size-cm">Размер не указан</span>
+      <span
+        v-if="customerShoeSizeCm && customerShoeSizeCm < 35 && customerShoeSizeCm > 12"
+        class="shoe-size-cm"
+        >= {{ customerShoeSizeCm }} см</span
+      >
+      <span v-else class="shoe-size-cm">Не указан</span>
     </div>
 
     <button
@@ -531,6 +554,9 @@ const props = defineProps({
       <div v-if="notificationMessage" class="notification">
         {{ notificationMessage }}
       </div>
+    </div>
+    <div v-if="isLoggedIn" class="text-green-500 flex-center py-2 sm:w-auto">
+      {{ notificationMessage }}
     </div>
   </div>
 </template>
