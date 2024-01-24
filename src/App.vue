@@ -5,6 +5,7 @@ import Drawer from './components/Drawer.vue'
 import Profile from './components/Profile.vue'
 import { initializeApp } from 'firebase/app'
 import { signInWithEmailAndPassword } from 'firebase/auth'
+const userPhotoUrl = ref('/profile.svg') // начальное значение
 
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
 
@@ -28,38 +29,27 @@ const app = initializeApp(firebaseConfig)
 const auth = getAuth(app)
 // Получение экземпляра базы данных Firebase
 const database = getDatabase(app)
-const toggleMode = () => {
-  isLoginMode.value = !isLoginMode.value
-}
-const login = async () => {
-  try {
-    await signInWithEmailAndPassword(auth, email.value, password.value)
-    // Вход выполнен успешно
-  } catch (error) {
-    console.error(error)
-    // Обработка ошибок входа
-  }
-}
-const register = async () => {
-  console.log('Attempting to register:', email.value, password.value)
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value)
-    console.log('User registered:', userCredential.user)
 
-    // Создание профиля пользователя
-    try {
-      await set(dbRef(database, `users/${userCredential.user.uid}`), {
-        favorites: [],
-        orders: []
-      })
-      console.log('User profile created')
-    } catch (error) {
-      console.error('Error creating user profile:', error)
+const cart = ref([])
+const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.price, 0))
+const drawerOpen = ref(false)
+const isOrderHistoryOpen = ref(false) // Добавлено состояние для открытия истории заказов
+
+const isProfileOpen = ref(false) // Инициализация isProfileOpen
+onMounted(async () => {
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      const userProfile = await fetchUserProfile(user.uid)
+      if (userProfile && userProfile.photo) {
+        userPhotoUrl.value = userProfile.photo // Обновляем фото
+      } else {
+        userPhotoUrl.value = '/profile.svg' // Запасное изображение
+      }
+    } else {
+      userPhotoUrl.value = '/profile.svg' // Изображение, если пользователь не авторизован
     }
-  } catch (error) {
-    console.error('Registration error:', error)
-  }
-}
+  })
+})
 
 const fetchUserProfile = async (userId) => {
   const userRef = dbRef(database, `users/${userId}`)
@@ -74,25 +64,6 @@ const fetchUserProfile = async (userId) => {
     console.error('Error fetching user profile:', error)
   }
 }
-
-const showLoginModal = ref(false)
-
-const cart = ref([])
-const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.price, 0))
-const drawerOpen = ref(false)
-const isOrderHistoryOpen = ref(false) // Добавлено состояние для открытия истории заказов
-// onMounted(() => {
-//   auth.onAuthStateChanged(async (user) => {
-//     if (user) {
-//       const userProfile = await fetchUserProfile(user.uid)
-//       // Обработка данных пользователя
-//     } else {
-//       showLoginModal.value = true
-//     }
-//   })
-// })
-const isProfileOpen = ref(false) // Инициализация isProfileOpen
-
 const addToCart = async (item) => {
   const database = getDatabase()
   // Создаём новую запись в 'carts' и получаем уникальный ключ
@@ -200,10 +171,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <LoginModal v-if="showLoginModal" @close="showLoginModal = false" />
-
   <Drawer v-if="drawerOpen" :total-price="totalPrice" @create-order="createOrder" />
-  <Header :total-price="totalPrice" @open-drawer="openDrawer" />
+  <Header :user-photo="userPhotoUrl" :total-price="totalPrice" @open-drawer="openDrawer" />
   <Profile v-if="isProfileOpen" :close-profile="closeProfile" />
 
   <div class="bg-white w-full m-auto rounded-xl shadow-xl p-4 mt-8 sm:mt-8 md:mt-12 lg:mt-14">

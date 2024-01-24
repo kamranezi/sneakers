@@ -3,9 +3,9 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import OrderHistory from './OrderHistory.vue' // Убедитесь, что путь к компоненту верный
 import { inject } from 'vue'
 import Profile from './Profile.vue' // Импортируйте ваш компонент профиля
-
 defineProps({
   totalPrice: Number,
+  userPhoto: String,
   openOrderHistory: Function // Добавлено для вызова открытия истории заказов
 })
 const emit = defineEmits(['openDrawer'])
@@ -110,7 +110,7 @@ onUnmounted(() => {
         @click="openProfile"
         class="flex items-center cursor-pointer gap-0.5 mr-2 sm:gap-1 text-gray-500 hover:text-black"
       >
-        <img src="/profile.svg" alt="Profile" class="w-6 h-6" />
+        <img :src="userPhoto" alt="Profile" class="w-7 h-7 rounded-full" />
         <span class="hidden sm:block">Профиль</span>
       </li>
     </ul>
