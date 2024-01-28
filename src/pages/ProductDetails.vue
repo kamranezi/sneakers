@@ -16,7 +16,9 @@ const swipeRight = () => {
     currentImageIndex.value--
   }
 }
-
+const navigateToProduct = (link) => {
+  router.push(`/product/${link}`)
+}
 const emit = defineEmits(['openDrawer'])
 const firebaseConfig = {
   apiKey: 'AIzaSyCE2imVR50t0z4dVKgPKAoLvjtz6I8KRog',
@@ -283,14 +285,16 @@ const toggleFavorite = async () => {
         </div>
       </div>
       <div class="flex flex-wrap mt-4">
-        <img
-          v-for="(color, index) in productDetails.colors"
+        <div
+          v-for="(link, index) in productDetails.color_links"
           :key="index"
-          :src="color"
           class="h-12 w-12 md:h-20 md:w-20 object-cover mx-1 my-1 rounded-lg cursor-pointer"
-          @click="currentImageIndex = index"
-        />
+          @click="navigateToProduct(link)"
+        >
+          <img :src="productDetails.colors[index]" class="h-full w-full object-cover rounded-lg" />
+        </div>
       </div>
+
       <!-- Описание продукта -->
       <div class="description mt-4 md:max-w-3xl lg:w-4/5">
         <h2 class="text-lg sm:text-3xl font-semibold mb-3">Description:</h2>

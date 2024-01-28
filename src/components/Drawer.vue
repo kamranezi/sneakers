@@ -3,8 +3,10 @@ import { inject, ref } from 'vue'
 import CartItemList from './CartItemList.vue'
 import InfoBlock from '@/components/InfoBlock.vue'
 import VueGoogleAutocomplete from 'vue-google-autocomplete'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 
 const customerPhone = ref('')
+const isProfileOpen = inject('isProfileOpen')
 
 // остальные методы, computed свойства и т.д.
 
@@ -28,6 +30,14 @@ const cardDetails = ref({
   cvv: ''
 })
 const proceedToCheckout = () => {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Логика оформления заказа для аутентифицированного пользователя
+    } else {
+      isProfileOpen.value = true // Открывает профиль/форму входа для неаутентифицированного пользователя
+      console.error('Пользователь не аутентифицирован')
+    }
+  })
   // Добавьте здесь логику для перехода к оформлению заказа, если требуется
 }
 </script>

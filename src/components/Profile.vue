@@ -59,11 +59,21 @@ onMounted(() => {
     isLoggedIn.value = user
   })
 })
+const showTelegramWidget = ref(true)
+
 const script = document.createElement('script')
 onMounted(() => {
-  window.onTelegramAuth = onTelegramAuth
+  const urlParams = new URLSearchParams(window.location.search)
+  const userId = urlParams.get('user_id')
+  const username = urlParams.get('username')
 
-  loadTelegramWidget() // Вызов функции загрузки виджета
+  if (!userId && !username) {
+    window.onTelegramAuth = onTelegramAuth
+    loadTelegramWidget()
+    showTelegramWidget.value = true
+  } else {
+    showTelegramWidget.value = false
+  }
 })
 function loadTelegramWidget() {
   const container = document.getElementById('telegram-button-container')
@@ -316,7 +326,7 @@ onMounted(async () => {
         const userData = userSnapshot.val()
         customerPhotoUrl.value = userData.photo || '/tg.png'
         selectedSizeFormat.value = userData.format || 'EU' // Установите значение по умолчанию, если оно отсутствует
-        customerShoeSize.value = userData.size ? String(userData.size) : '36'
+        customerShoeSize.value = userData.size ? String(userData.size) : ''
         // Пример значения по умолчанию
 
         console.log('Полученные данные пользователя:', userData) // Добавьте эту строку для отладки
@@ -324,7 +334,7 @@ onMounted(async () => {
         // Обновление данных профиля
         customerName.value = userData.name || ''
         customerEmail.value = userData.email || ''
-        customerGender.value = userData.gender || ''
+        customerGender.value = userData.gender || 'Gender'
         customerAge.value = userData.age || ''
         customerFavoriteBrand.value = userData.brand || ''
 
@@ -496,7 +506,7 @@ const props = defineProps({
       <select
         id="shoeSize"
         v-model="customerShoeSize"
-        class="form-select w-auto ml-2 rounded-lg border border-gray-300 mb-4 p-2"
+        class="form-input w-auto ml-2 rounded-lg border border-gray-300 mb-4 p-2"
       >
         <option v-for="size in availableSizes" :key="size" :value="size">{{ size }}</option>
       </select>
@@ -565,7 +575,16 @@ const props = defineProps({
         <img src="/icons8-google.svg" alt="Google Sign-In" class="w-6 h-6 mr-2" />
         Войти через Google
       </button>
-      <div v-if="!isLoggedIn" id="telegram-button-container"></div>
+      <button
+        v-if="!isLoggedIn && !showTelegramWidget"
+        @click="authenticateUserOnClick"
+        class="google-sign-in-button transition w-full flex justify-center items-center bg-white text-gray-700 py-2 px-4 rounded shadow hover:shadow-md cursor-pointer mb-4"
+      >
+        <!-- Используйте вашу иконку Google -->
+        <img src="/tg.png" alt="Google Sign-In" class="w-6 h-6 mr-2" />
+        Войти через Telegram
+      </button>
+      <div v-if="!isLoggedIn && showTelegramWidget" id="telegram-button-container"></div>
 
       <div v-if="notificationMessage" class="notification">
         {{ notificationMessage }}

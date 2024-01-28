@@ -35,7 +35,8 @@ const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.pr
 const drawerOpen = ref(false)
 const isOrderHistoryOpen = ref(false) // Добавлено состояние для открытия истории заказов
 
-const isProfileOpen = ref(false) // Инициализация isProfileOpen
+const isProfileOpen = ref(false)
+provide('isProfileOpen', isProfileOpen)
 onMounted(async () => {
   auth.onAuthStateChanged(async (user) => {
     if (user) {

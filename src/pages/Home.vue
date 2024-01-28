@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app'
 import { getDatabase, ref as dbRef, onValue, set, remove, update, get } from 'firebase/database'
 import { onMounted, ref, reactive, watch, computed } from 'vue'
 import { inject } from 'vue'
+
 import CardList from '../components/CardList.vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { app } from '@/firebase.js'
@@ -29,27 +30,40 @@ const updateIsAddedState = () => {
     item.isAdded = cart.value.some((cartItem) => cartItem.id === item.id)
   })
 }
+const isProfileOpen = inject('isProfileOpen')
+
 const onFavoriteClick = async (item) => {
   if (!auth.currentUser) {
+    // Пользователь не авторизован, открываем профиль
+    isProfileOpen.value = true // Правильно изменяем состояние
     console.error('Пользователь не авторизован')
     return
   }
+
   const userId = auth.currentUser.uid
   const itemRef = dbRef(database, `users/${userId}/favorites/${item.id}`)
+
   if (item.isFavorite) {
     await remove(itemRef)
     userFavorites.value = userFavorites.value.filter((favId) => favId !== item.id)
+    item.isFavorite = false // Обновление состояния кнопки при удалении из избранного
   } else {
     await set(itemRef, true)
     userFavorites.value.push(item.id)
+    item.isFavorite = true // Обновление состояния кнопки при добавлении в избранное
   }
-  item.isFavorite = !item.isFavorite
 }
 const isLoggedIn = ref(true)
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     isLoggedIn.value = user
   })
+})
+onAuthStateChanged(auth, async (user) => {
+  isLoggedIn.value = !!user
+  if (user) {
+    await fetchUserFavorites()
+  }
 })
 
 onMounted(async () => {
@@ -130,6 +144,10 @@ const toggleBrandSelection = (brand) => {
 }
 const sizes = ref([
   'Все размеры',
+  1,
+  1.5,
+  2,
+  2.5,
   3,
   3.5,
   4,
@@ -223,10 +241,10 @@ const fetchItems = async () => {
     }))
   }
 }
-const emit = defineEmits(['addToFavorite'])
-const addToFavorite = (item) => {
-  emit('addToFavorite', item)
-}
+watch(userFavorites, async () => {
+  await fetchItems() // Это должно обновить isFavorite каждого элемента
+})
+
 // Функция для получения избранных товаров текущего пользователя
 const fetchUserFavorites = async () => {
   if (!auth.currentUser) {
@@ -238,6 +256,9 @@ const fetchUserFavorites = async () => {
   const snapshot = await get(favoritesRef)
   if (snapshot.exists()) {
     userFavorites.value = Object.keys(snapshot.val())
+    rawItems.value.forEach((item) => {
+      item.isFavorite = userFavorites.value.includes(item.id)
+    })
   } else {
     userFavorites.value = []
   }
@@ -290,7 +311,6 @@ onMounted(() => {
 
   // Загрузка товаров и избранных
   fetchItems().then(fetchUserFavorites)
-  updateIsAddedState()
   fetchCategories()
 })
 
