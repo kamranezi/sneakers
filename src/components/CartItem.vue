@@ -5,7 +5,7 @@ defineProps({
   title: String,
   imageUrl: String,
   price: Number,
-  selectedSize: Number
+  selectedSize: String
   // Удалены неиспользуемые props и функции
 })
 </script>

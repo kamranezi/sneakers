@@ -137,7 +137,7 @@ const authenticateUserOnClick = async () => {
 
         // Записываем name в Firebase, используя UID
         const updateData = { name: name }
-        if (photoUrl && photoUrl !== 'None' && photoUrl !== null) {
+        if (photoUrl !== 'None' && photoUrl !== null) {
           updateData.photo = photoUrl
         }
 
@@ -208,7 +208,7 @@ function authenticateUserWithCustomToken(customToken, username, photoUrl) {
         format: selectedSizeFormat.value
       }
 
-      if (photoUrl && photoUrl !== 'None' && photoUrl !== null) {
+      if (photoUrl !== 'None' && photoUrl !== null) {
         updateData.photo = photoUrl
       }
 
