@@ -225,6 +225,16 @@ const toggleFavorite = async () => {
       >
         Цена: ${{ productDetails.price }}
       </p>
+      <div class="flex flex-wrap mt-4">
+        <div
+          v-for="(link, index) in productDetails.color_links"
+          :key="index"
+          class="h-12 w-12 md:h-20 md:w-20 object-cover mx-1 my-1 rounded-lg cursor-pointer"
+          @click="navigateToProduct(link)"
+        >
+          <img :src="productDetails.colors[index]" class="h-full w-full object-cover rounded-lg" />
+        </div>
+      </div>
 
       <h2 class="text-lg sm:text-xl font-semibold mb-2">Sizes (US):</h2>
       <div class="flex flex-wrap gap-2 mb-4">
@@ -282,16 +292,6 @@ const toggleFavorite = async () => {
           >
             Убрать из избранного
           </button>
-        </div>
-      </div>
-      <div class="flex flex-wrap mt-4">
-        <div
-          v-for="(link, index) in productDetails.color_links"
-          :key="index"
-          class="h-12 w-12 md:h-20 md:w-20 object-cover mx-1 my-1 rounded-lg cursor-pointer"
-          @click="navigateToProduct(link)"
-        >
-          <img :src="productDetails.colors[index]" class="h-full w-full object-cover rounded-lg" />
         </div>
       </div>
 

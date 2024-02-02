@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app'
 import { getDatabase, ref as dbRef, onValue, set, remove, update, get } from 'firebase/database'
 import { onMounted, ref, reactive, watch, computed } from 'vue'
 import { inject } from 'vue'
+import Multiselect from 'vue-multiselect'
 
 import CardList from '../components/CardList.vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
@@ -30,6 +31,7 @@ const updateIsAddedState = () => {
     item.isAdded = cart.value.some((cartItem) => cartItem.id === item.id)
   })
 }
+
 const isProfileOpen = inject('isProfileOpen')
 
 const onFavoriteClick = async (item) => {
@@ -65,7 +67,12 @@ onAuthStateChanged(auth, async (user) => {
     await fetchUserFavorites()
   }
 })
-
+onMounted(async () => {
+  if (auth.currentUser) {
+    await fetchUserFavorites()
+  }
+  // Другие действия при монтировании
+})
 onMounted(async () => {
   if (auth.currentUser) {
     const userId = auth.currentUser.uid
@@ -84,27 +91,36 @@ onMounted(async () => {
   }
 })
 
-// Функция для удаления из избранного
-
 //Пагинация
 const currentPage = ref(1)
-const itemsPerPage = 30 // Вы можете изменить это число в зависимости от желаемого количества элементов на странице
+const itemsPerPage = 32 // Вы можете изменить это число в зависимости от желаемого количества элементов на странице
 const totalPages = computed(() => Math.ceil(items.value.length / itemsPerPage))
+const paginationClicked = ref(false)
+
 const paginatedItems = computed(() => {
+  if (!paginationClicked.value) {
+    currentPage.value = 1
+  }
+
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
+  paginationClicked.value = false // Сбрасываем флаг после использования
   return items.value.slice(start, end)
 })
+
+const goToPage = (pageNumber) => {
+  paginationClicked.value = true // Устанавливаем флаг при нажатии пагинации
+  currentPage.value = pageNumber
+  scrollToTop()
+}
+
 const scrollToTop = () => {
   window.scrollTo({
     top: 0,
     behavior: 'smooth' // Для плавного скроллинга
   })
 }
-const goToPage = (pageNumber) => {
-  currentPage.value = pageNumber
-  scrollToTop()
-}
+
 const rawItems = ref([])
 const filters = reactive({
   sortBy: 'title',
@@ -143,35 +159,42 @@ const toggleBrandSelection = (brand) => {
   }
 }
 const sizes = ref([
-  'Все размеры',
-  1,
-  1.5,
-  2,
-  2.5,
-  3,
-  3.5,
-  4,
-  4.5,
-  5,
-  5.5,
-  6,
-  6.5,
-  7,
-  7.5,
-  8,
-  8.5,
-  9,
-  9.5,
-  10,
-  10.5,
-  11,
-  11.5,
-  12,
-  13,
-  14,
-  14.5,
-  15
+  { value: 'Все размеры', label: 'Все размеры' },
+  { value: '1', label: '1' },
+  { value: '1.5', label: '1.5' },
+  { value: '2', label: '2' },
+  { value: '2.5', label: '2.5' },
+  { value: '3', label: '3' },
+  { value: '3.5', label: '3.5' },
+  { value: '4 | 4K | M3/W4 | M4/W5', label: '4' },
+  { value: '4.5 | M3.5/W4.5 | M4.5/W5.5', label: '4.5' },
+  { value: '5 | 5K | M4/W5 | M5/W6', label: '5' },
+  { value: '5.5 | 5.5K | M4.5/W5.5 | M5.5/W6.5', label: '5.5' },
+  { value: '6 | 6K | M5/W6 | M6/W7', label: '6' },
+  { value: '6.5 | 6.5K | M5.5/W6.5 | M6.5/W7.5', label: '6.5' },
+  { value: '7 | 7K | M6/W7 | M7/W8', label: '7' },
+  { value: '7.5 | 7.5K | M6.5/W7.5 | M7.5/W8.5', label: '7.5' },
+  { value: '8 | 8K | M7/W8 | M8/W9', label: '8' },
+  { value: '8.5 | 8.5K | M7.5/W8.5 | M8.5/W9.5', label: '8.5' },
+  { value: '9 | 9K | M8/W9 | M9/W10', label: '9' },
+  { value: '9.5 | 9.5K | M8.5/W9.5 | M9.5/W10.5', label: '9.5' },
+  { value: '10 | 10K | M9/W10 | M10/W11', label: '10' },
+  { value: '10.5 | 10.5K | M9.5/W10.5 | M10.5/W11.5', label: '10.5' },
+  { value: '11 | 11K | M10/W11 | M11/W12', label: '11' },
+  { value: '11.5 | 11.5K | M10.5/W11.5 | M11.5/W12.5', label: '11.5' },
+  { value: '12 | 12K | M11/W12 | M12/W13', label: '12' },
+  { value: '12.5 | 12.5K | M11.5/W12.5 | M12.5/W13.5', label: '12.5' },
+  { value: '13 | 13K | M12/W13 | M13/W14', label: '13' },
+  { value: '13.5 | 13.5K | M12.5/W13.5 | M13.5/W14.5', label: '13.5' },
+  { value: '14 | 14K | M13/W14 | M14/W15', label: '14' },
+  { value: '14.5 | 14.5K | M13.5/W14.5 | M14.5/W15.5', label: '14.5' },
+  { value: '15 | 15K | M14/W15 | M15/W16', label: '15' },
+  { value: '16 | M15/W16 | M16/W17', label: '16' },
+  { value: '17 | M16/W17 | M17/W18', label: '17' },
+  { value: '18 | M17/W18 | M18/W19', label: '18' },
+  { value: '19 | M18/W19 | M19/W20', label: '19' }
 ])
+
 const selectedSize = ref('Все размеры')
 
 const items = computed(() => {
@@ -190,14 +213,20 @@ const items = computed(() => {
       if (selectedSize.value === 'Все размеры') {
         return true
       }
-      const selectedSizeNum = Number(selectedSize.value)
+
+      const selectedSizesArray = selectedSize.value.split(' | ')
       const hasSizes = Array.isArray(item.sizes)
       const hasUnavailableSizes = Array.isArray(item.unavailable_sizes)
-      return (
-        hasSizes &&
-        item.sizes.includes(selectedSizeNum) &&
-        (!hasUnavailableSizes || !item.unavailable_sizes.includes(selectedSizeNum))
-      )
+
+      // Фильтрация по всем возможным размерам
+      const matchesAnySize = selectedSizesArray.some((size) => {
+        const isAvailable = hasSizes && item.sizes.includes(size)
+        const isUnavailable = hasUnavailableSizes && item.unavailable_sizes.includes(size)
+
+        return isAvailable && !isUnavailable
+      })
+
+      return matchesAnySize
     })
     .filter((item) => item.title.toLowerCase().includes(filters.searchQuery.toLowerCase()))
     .sort((a, b) => {
@@ -241,9 +270,6 @@ const fetchItems = async () => {
     }))
   }
 }
-watch(userFavorites, async () => {
-  await fetchItems() // Это должно обновить isFavorite каждого элемента
-})
 
 // Функция для получения избранных товаров текущего пользователя
 const fetchUserFavorites = async () => {
@@ -283,9 +309,7 @@ watch(
 watch(selectedSize, (newSize) => {
   localStorage.setItem('selectedSize', newSize)
 })
-watch(userFavorites, async () => {
-  await fetchItems() // Перезагрузка элементов при изменении избранных
-})
+
 onMounted(() => {
   // Восстановление состояния корзины
   cart.value = JSON.parse(localStorage.getItem('cart')) || []
@@ -310,15 +334,9 @@ onMounted(() => {
   }
 
   // Загрузка товаров и избранных
+
   fetchItems().then(fetchUserFavorites)
   fetchCategories()
-})
-
-onMounted(async () => {
-  if (auth.currentUser) {
-    await fetchUserFavorites()
-  }
-  // Другие действия при монтировании
 })
 
 const onChangeSelect = (event) => {
@@ -330,6 +348,9 @@ const onChangeSearchInput = (event) => {
   filters.searchQuery = event.target.value
   // fetchItems() вызывать, если вам нужно изменить запрос к базе данных на основе строки поиска
 }
+watch(userFavorites, async () => {
+  await fetchItems() // Это должно обновить isFavorite каждого элемента
+})
 </script>
 
 <template>
@@ -400,8 +421,8 @@ const onChangeSearchInput = (event) => {
         </div>
         <div class="size-selector">
           <select v-model="selectedSize">
-            <option v-for="size in sizes" :key="size" :value="size">
-              {{ size }}
+            <option v-for="size in sizes" :key="size.value" :value="size.value">
+              {{ size.label }}
             </option>
           </select>
         </div>
