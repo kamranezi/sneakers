@@ -70,10 +70,10 @@ const proceedToCheckout = async () => {
 // Подключение к сокету на клиенте
 
 // Слушаем событие 'paymentSuccess'
-socket.on('paymentSuccess', (notificationData) => {
-  emit('createOrder')
-  isOrderCreated.value = true
-  console.log('Received payment success notification on the client:', notificationData)
+// socket.on('paymentSuccess', (notificationData) => {
+//   emit('createOrder')
+//   isOrderCreated.value = true
+//   console.log('Received payment success notification on the client:', notificationData)
 
   // Ваша логика обработки уведомления на клиенте
 })
