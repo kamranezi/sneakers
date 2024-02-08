@@ -3,11 +3,14 @@ import { provide, ref, watch, computed, onMounted } from 'vue'
 import Header from './components/Header.vue'
 import Drawer from './components/Drawer.vue'
 import Profile from './components/Profile.vue'
+import { onUnmounted } from 'vue'
+
 import { initializeApp } from 'firebase/app'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 const userPhotoUrl = ref('/profile.svg') // начальное значение
 
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
+import { EventBus } from './event-bus.js' // Если вы используете EventBus
 
 import OrderHistory from './components/OrderHistory.vue'
 import { getDatabase, ref as dbRef, set, push, get, update } from 'firebase/database'
@@ -111,12 +114,21 @@ const closeProfile = () => {
 const openDrawer = () => {
   drawerOpen.value = true
 }
+// Получаем текущий URL страницы
+EventBus.on('createOrder', async () => {
+  console.log('Создание заказа')
+  await createOrder() // Вызываем функцию создания заказа
+})
+
 const createOrder = async () => {
-  if (auth.currentUser && cart.value.every((item) => item.size)) {
+  if (totalPrice.value && cart.value.every((item) => item.size)) {
     const userId = auth.currentUser.uid
+
     const userOrdersRef = dbRef(database, `users/${userId}/orders`)
+
     const generalOrdersRef = dbRef(database, 'orders')
     const newOrderRef = push(generalOrdersRef) // Получаем новую ссылку для общего заказа
+    console.log('Попытка создать заказ')
 
     const order = {
       items: cart.value,
@@ -141,7 +153,10 @@ const createOrder = async () => {
     console.error('Размер для всех товаров должен быть выбран')
   }
 }
-
+onUnmounted(() => {
+  EventBus.off('createOrder')
+  console.log('Отписка от события заказа') // Отписываемся от события
+})
 watch(
   cart,
   (newCart) => {
@@ -172,7 +187,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <Drawer v-if="drawerOpen" :total-price="totalPrice" @create-order="createOrder" />
+  <Drawer v-if="drawerOpen" :total-price="totalPrice" />
   <Header :user-photo="userPhotoUrl" :total-price="totalPrice" @open-drawer="openDrawer" />
   <Profile v-if="isProfileOpen" :close-profile="closeProfile" />
 

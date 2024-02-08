@@ -99,9 +99,8 @@ const authenticateUserOnClick = async () => {
   const urlParams = new URLSearchParams(window.location.search)
   const userId = urlParams.get('user_id')
   const username = urlParams.get('username')
-  const photoUrl = urlParams.get('photo_url') // Получение URL фото
 
-  console.log('UserID из URL:', userId, 'Username из URL:', username, 'Photo URL:', photoUrl)
+  console.log('UserID из URL:', userId, 'Username из URL:', username)
 
   // Проверяем, получены ли userId и username
   if (userId && username) {
@@ -137,9 +136,6 @@ const authenticateUserOnClick = async () => {
 
         // Записываем name в Firebase, используя UID
         const updateData = { name: name }
-        if (photoUrl !== 'None' && photoUrl !== null) {
-          updateData.photo = photoUrl
-        }
 
         // Записываем данные в Firebase, используя UID
         const userRef = dbRef(database, `users/${firebaseUid}`)
@@ -160,20 +156,28 @@ function onTelegramAuth(userData) {
 
   // Предполагается, что username уже содержится в userData
   const username = userData.username
+  const photo_url = userData.photo_url || 'None' // Добавьте эту строку
 
-  sendUserDataToServer({ user: userData }) // Отправляем данные пользователя на сервер
+  console.log('Username:', username)
+  console.log('Photo URL:', photo_url)
+
+  // Проверяем, есть ли фото в данных пользователя
+
+  sendUserDataToServer({ user: userData, photo_url }) // Отправляем данные пользователя на сервер
     .then((response) => {
       console.log('Ответ сервера:', response)
       if (response.customToken) {
         // Аутентификация в Firebase с использованием кастомного токена
-        authenticateUserWithCustomToken(response.customToken, username) // Передаем username и photoUrl
+        authenticateUserWithCustomToken(response.customToken, username, photo_url) // Передаем username и photoUrl
       }
       // Здесь можно добавить дополнительную логику обработки ответа сервера
     })
     .catch((error) => {
       console.error('Ошибка при отправке данных пользователя на сервер:', error)
     })
-} // Функция для отправки данных пользователя на сервер
+}
+
+// Функция для отправки данных пользователя на сервер
 async function sendUserDataToServer(data) {
   try {
     const response = await fetch(
@@ -192,7 +196,7 @@ async function sendUserDataToServer(data) {
   }
 }
 
-function authenticateUserWithCustomToken(customToken, username, photoUrl) {
+function authenticateUserWithCustomToken(customToken, username, photo_url) {
   signInWithCustomToken(auth, customToken)
     .then((userCredential) => {
       notificationMessage.value = 'Вы успешно вошли через Telegram!'
@@ -200,16 +204,11 @@ function authenticateUserWithCustomToken(customToken, username, photoUrl) {
       console.log('Пользователь успешно аутентифицирован:', userCredential.user)
       // Дополнительная логика после успешной аутентификации, например, сохранение username
       const updateData = {
-        name: username,
-        gender: customerGender.value,
-        age: customerAge.value,
-        size: parseInt(customerShoeSize.value), // Преобразование в число
-        brand: customerFavoriteBrand.value,
-        format: selectedSizeFormat.value
+        name: username
       }
 
-      if (photoUrl !== 'None' && photoUrl !== null) {
-        updateData.photo = photoUrl
+      if (photo_url !== 'None' && photo_url !== null) {
+        updateData.photo = photo_url
       }
 
       return update(dbRef(database, `users/${userCredential.user.uid}`), updateData)

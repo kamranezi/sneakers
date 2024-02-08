@@ -5,6 +5,7 @@ import { autoAnimatePlugin } from '@formkit/auto-animate/vue'
 import App from './App.vue'
 import Home from './pages/Home.vue'
 import Favorites from './pages/Favorites.vue'
+import Success from '@/pages/Success.vue'
 import ProductDetails from './pages/ProductDetails.vue' // Импортируйте новый компонент
 import VueTelInput from 'vue-tel-input'
 import 'vue-tel-input/vue-tel-input.css'
@@ -15,6 +16,7 @@ app.use(Vue3TouchEvents)
 const routes = [
   { path: '/', name: 'Home', component: Home },
   { path: '/favorites', name: 'Favorites', component: Favorites },
+  { path: '/success', name: 'Success', component: Success },
   { path: '/product/:id', name: 'ProductDetails', component: ProductDetails } // Добавьте новый маршрут
 ]
 const router = createRouter({

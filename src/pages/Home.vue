@@ -505,7 +505,8 @@ watch(userFavorites, async () => {
 }
 
 .category-scroll-container::-webkit-scrollbar {
-  height: 2px; /* Height of the scrollbar */
+  height: 1px;
+  width: 1px; /* Height of the scrollbar */
   background-color: transparent; /* Optional: can be set to the page background color */
 }
 .category-scroll-container::-webkit-scrollbar-thumb {
@@ -625,5 +626,6 @@ watch(userFavorites, async () => {
     font-size: 12px; /* Меньший размер шрифта */ /* Убедитесь, что кнопка будет над другими элементами */
   }
 }
+
 /* Добавьте медиа-запросы, если нужно адаптировать кнопку под мобильные устройства */
 </style>

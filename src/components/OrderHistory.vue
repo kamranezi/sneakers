@@ -55,7 +55,7 @@ onMounted(() => {
                   <div class="mt-2 sm:mt-0">
                     <p class="text-lg text-gray-500">{{ order.createdAt }}</p>
                     <p class="text-lg font-medium text-gray-500">${{ order.totalPrice }}</p>
-                    <p class="text-lg text-gray-500">{{ order.items.length }} товаров</p>
+                    <!--                    <p class="text-lg text-gray-500">{{ order.items.length }} товаров</p>-->
                   </div>
                 </div>
               </div>

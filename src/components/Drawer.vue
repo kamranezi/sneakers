@@ -9,18 +9,16 @@ const apiKey = 'AIzaSyCE2imVR50t0z4dVKgPKAoLvjtz6I8KRog'
 const customerPhone = ref('+791')
 const isProfileOpen = inject('isProfileOpen')
 const auth = getAuth()
-const socket = io('http://localhost:3000') // Укажите ваш адрес сервера
+// const socket = io('http://localhost:3000') // Укажите ваш адрес сервера
 
 // остальные методы, computed свойства и т.д.
 
 const getAddressData = (addressData, placeResultData, id) => {
   customerAddress.value = addressData.name // Или другое свойство в зависимости от ваших требований
 }
-const emit = defineEmits(['createOrder'])
 const { closeDrawer } = inject(['cart'])
 defineProps({
-  totalPrice: Number,
-  isCreatingOrder: Boolean
+  totalPrice: Number
 })
 const { cart, addToCart, removeFromCart } = inject(['cart'])
 const customerCity = ref('')
@@ -28,7 +26,6 @@ const customerAddress = ref('')
 const customerHouse = ref('')
 const customerApartment = ref('')
 const customerFloor = ref('')
-const isOrderCreated = ref(false)
 const selectedPaymentMethod = ref('')
 // const cardDetails = ref({
 //   cardNumber: '',
@@ -75,8 +72,7 @@ const proceedToCheckout = async () => {
 //   isOrderCreated.value = true
 //   console.log('Received payment success notification on the client:', notificationData)
 
-  // Ваша логика обработки уведомления на клиенте
-})
+// Ваша логика обработки уведомления на клиенте
 </script>
 
 <template>
@@ -102,13 +98,13 @@ const proceedToCheckout = async () => {
       description="Добавьте хотя бы одну пару кроссовок, чтобы оформить заказ."
       image-url="/package-icon.png"
     />
-    <InfoBlock
-      v-if="isOrderCreated"
-      v-auto-animate
-      title="Ваш заказ оформлен"
-      description="Спасибо за покупку! Мы скоро свяжемся с вами для подтверждения заказа."
-      image-url="/order-success-icon.png"
-    />
+    <!--    <InfoBlock-->
+    <!--      v-if="isOrderCreated"-->
+    <!--      v-auto-animate-->
+    <!--      title="Ваш заказ оформлен"-->
+    <!--      description="Спасибо за покупку! Мы скоро свяжемся с вами для подтверждения заказа."-->
+    <!--      image-url="/order-success-icon.png"-->
+    <!--    />-->
     <CartItemList v-else />
 
     <div class="flex gap-2 mb-4 my-3">
@@ -231,6 +227,10 @@ const proceedToCheckout = async () => {
         method="post"
         accept-charset="utf-8"
       >
+        Страница успеха
+        <div class="ym-hidden-inputs">
+          <input name="shopSuccessURL" type="hidden" value="https://originalus.ru/Success" />
+        </div>
         <!--        <div class="ym-products">-->
         <!--          <div class="ym-block-title ym-products-title">Товары</div>-->
 
